@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.source.autotrack"
@@ -24,7 +26,9 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": ["NOTIFICATIONS"]
+      "permissions": [
+        "NOTIFICATIONS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -43,8 +47,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "00d8f6f2-25eb-4395-adbb-20bc291d40e9"
+        "projectId": "e2ebc2e2-b030-46c8-a626-03a7c84d6093"
       }
-    }
+    },
+    "owner": "utiqano"
   }
 }
