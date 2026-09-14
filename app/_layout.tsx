@@ -3,6 +3,7 @@ import "../lib/logbox";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuthStore } from "../lib/authStore";
 import { useFirebaseSync } from "../lib/useFirebaseSync";
 import { useNotifications } from "../lib/useNotifications";
@@ -12,16 +13,13 @@ export default function RootLayout() {
   const segments = useSegments();
   const { user, loading, _init } = useAuthStore();
 
-  // Initialise l'écoute Firebase Auth
   useEffect(() => {
     _init();
   }, [_init]);
 
-  // Active la sync Firebase + notifications (seulement si connecté)
   useFirebaseSync();
   useNotifications();
 
-  // Redirection selon l'état d'auth
   useEffect(() => {
     if (loading) return;
     const inAuthGroup = segments[0] === "(auth)";
@@ -41,9 +39,11 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </SafeAreaProvider>
   );
 }

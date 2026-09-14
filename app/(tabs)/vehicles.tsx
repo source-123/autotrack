@@ -85,7 +85,10 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             <Text className="text-lg font-bold text-slate-900">
               {vehicle.brand} {vehicle.model}
             </Text>
-            <Text className="text-sm text-slate-500 mt-0.5">
+            <Text
+              className="text-sm text-slate-500 mt-0.5"
+              style={{ writingDirection: "ltr" }}
+            >
               {vehicle.plate} • {vehicle.year}
             </Text>
           </View>

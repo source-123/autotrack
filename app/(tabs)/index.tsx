@@ -177,7 +177,11 @@ export default function HomeScreen() {
                     <Text className="font-bold text-slate-900" numberOfLines={1}>
                       {v.brand} {v.model}
                     </Text>
-                    <Text className="text-xs text-slate-500 mt-1" numberOfLines={1}>
+                    <Text
+                      className="text-xs text-slate-500 mt-1"
+                      numberOfLines={1}
+                      style={{ writingDirection: "ltr" }}
+                    >
                       {v.plate} • {formatMileage(v.mileage)}
                     </Text>
                   </View>
