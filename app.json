@@ -10,11 +10,9 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#3b82f6"
+      "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.source.autotrack"
@@ -24,11 +22,9 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#3b82f6"
+        "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "NOTIFICATIONS"
-      ]
+      "permissions": ["NOTIFICATIONS"]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -40,17 +36,15 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#3b82f6"
+          "color": "#2563eb"
         }
-      ],
-      "expo-image"
+      ]
     ],
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "e2ebc2e2-b030-46c8-a626-03a7c84d6093"
+        "projectId": "00d8f6f2-25eb-4395-adbb-20bc291d40e9"
       }
-    },
-    "owner": "utiqano"
+    }
   }
 }

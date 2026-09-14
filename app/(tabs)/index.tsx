@@ -35,8 +35,17 @@ export default function HomeScreen() {
   return (
     <ScrollView className="flex-1 bg-slate-50">
       <View className="p-4">
-        <Text className="text-2xl font-bold text-slate-900 mb-1">Bonjour 👋</Text>
-        <Text className="text-slate-500 mb-6">Voici l'état de votre parc</Text>
+        <View className="flex-row items-center justify-between mb-5">
+          <View className="flex-1">
+            <Text className="text-2xl font-bold text-slate-900">Bonjour 👋</Text>
+            <Text className="text-slate-500 text-sm mt-1">Voici l'état de votre parc</Text>
+          </View>
+          <Image
+            source={require("../../assets/logo.png")}
+            style={{ width: 100, height: 50 }}
+            contentFit="contain"
+          />
+        </View>
 
         {/* Stats rapides */}
         <View className="flex-row gap-3 mb-4">
