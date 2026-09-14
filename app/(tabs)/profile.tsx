@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, Alert, Platform } from "react-native";
 import { Check, DollarSign, Bell, LogOut, User } from "lucide-react-native";
 import { router } from "expo-router";
 import { useStore } from "../../lib/store";
@@ -25,18 +25,27 @@ export default function ProfileScreen() {
     Alert.alert("✅ Notifications activées", "Les rappels seront programmés automatiquement.");
   };
 
-  const handleLogout = () => {
-    Alert.alert("Se déconnecter ?", "Tu devras te reconnecter.", [
-      { text: "Annuler", style: "cancel" },
-      {
-        text: "Déconnexion",
-        style: "destructive",
-        onPress: async () => {
-          await logoutUser();
-          router.replace("/(auth)/login");
-        },
-      },
-    ]);
+  const handleLogout = async () => {
+    const doLogout = async () => {
+      try {
+        await logoutUser();
+        // Pas besoin de router.replace : useAuth détecte le logout et redirige
+      } catch (e: any) {
+        console.error("Logout error:", e);
+      }
+    };
+
+    if (Platform.OS === "web") {
+      // Sur web, Alert.alert ne marche pas avec des boutons
+      if (window.confirm("Se déconnecter ? Tu devras te reconnecter.")) {
+        await doLogout();
+      }
+    } else {
+      Alert.alert("Se déconnecter ?", "Tu devras te reconnecter.", [
+        { text: "Annuler", style: "cancel" },
+        { text: "Déconnexion", style: "destructive", onPress: doLogout },
+      ]);
+    }
   };
 
   return (

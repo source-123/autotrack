@@ -1,6 +1,7 @@
 import { View, Text, TextInput, ScrollView, Pressable, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { goBackSafely } from "../../lib/navigation";
 import { useStore } from "../../lib/store";
 
 export default function InspectionFormScreen() {
@@ -45,7 +46,7 @@ export default function InspectionFormScreen() {
     };
     if (isEdit && id) updateInspection(id, data);
     else addInspection(data);
-    router.back();
+    goBackSafely();
   };
 
   return (

@@ -1,6 +1,7 @@
 import { View, Text, TextInput, ScrollView, Pressable, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { goBackSafely } from "../../lib/navigation";
 import { useStore } from "../../lib/store";
 import { MaintenanceType } from "../../types";
 
@@ -65,7 +66,7 @@ export default function MaintenanceFormScreen() {
     };
     if (isEdit && id) updateMaintenance(id, data);
     else addMaintenance(data);
-    router.back();
+    goBackSafely();
   };
 
   return (

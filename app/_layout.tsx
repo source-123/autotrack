@@ -1,4 +1,5 @@
 import "../global.css";
+import "../lib/logbox";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";

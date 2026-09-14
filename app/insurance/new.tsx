@@ -1,6 +1,7 @@
 import { View, Text, TextInput, ScrollView, Pressable, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { goBackSafely } from "../../lib/navigation";
 import { useStore } from "../../lib/store";
 import { Insurance } from "../../types";
 
@@ -55,7 +56,7 @@ export default function InsuranceFormScreen() {
     };
     if (isEdit && id) updateInsurance(id, data);
     else addInsurance(data);
-    router.back();
+    goBackSafely();
   };
 
   return (

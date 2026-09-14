@@ -1,6 +1,7 @@
 import { View, Text, TextInput, ScrollView, Pressable, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { goBackSafely } from "../../lib/navigation";
 import { useStore } from "../../lib/store";
 import { Vehicle } from "../../types";
 
@@ -50,7 +51,7 @@ export default function VehicleFormScreen() {
     };
     if (isEdit && id) updateVehicle(id, data);
     else addVehicle(data);
-    router.back();
+    goBackSafely();
   };
 
   return (

@@ -1,11 +1,13 @@
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { useMemo, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { goBackSafely } from "../../lib/navigation";
 import {
   Trash2, Plus, Wrench, Shield, ClipboardCheck, Link2,
   AlertCircle, Pencil, ArrowLeft,
 } from "lucide-react-native";
 import { useStore } from "../../lib/store";
+import { confirmAction } from "../../lib/confirm";
 import { formatDate, formatMileage, formatMoney, statusFromDate } from "../../lib/utils";
 
 type Tab = "vt" | "assurance" | "entretien" | "chaine";
@@ -54,10 +56,7 @@ export default function VehicleDetailScreen() {
   }
 
   const confirmDelete = (title: string, onConfirm: () => void) => {
-    Alert.alert(title, "Cette action est irréversible.", [
-      { text: "Annuler", style: "cancel" },
-      { text: "Supprimer", style: "destructive", onPress: onConfirm },
-    ]);
+    confirmAction(title, "Cette action est irréversible.", onConfirm);
   };
 
   const goToAdd = () => {
@@ -74,7 +73,7 @@ export default function VehicleDetailScreen() {
           title: `${vehicle.brand} ${vehicle.model}`,
           headerShown: true,
           headerLeft: () => (
-            <Pressable onPress={() => router.back()} className="ml-2">
+            <Pressable onPress={() => goBackSafely()} className="ml-2">
               <ArrowLeft color="#3b82f6" size={24} />
             </Pressable>
           ),
@@ -87,7 +86,7 @@ export default function VehicleDetailScreen() {
                 onPress={() =>
                   confirmDelete("Supprimer ce véhicule ?", () => {
                     removeVehicle(vehicle.id);
-                    router.back();
+                    goBackSafely();
                   })
                 }
               >
