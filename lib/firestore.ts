@@ -4,11 +4,13 @@ import {
   setDoc,
   deleteDoc,
   onSnapshot,
+  query,
+  where,
   Unsubscribe,
   getDocs,
   FirestoreError,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { db, auth } from "./firebase";
 
 export const COLLECTIONS = {
   vehicles: "vehicles",
@@ -20,11 +22,6 @@ export const COLLECTIONS = {
 
 export type CollectionName = keyof typeof COLLECTIONS;
 
-/**
- * Nettoie récursivement un objet :
- * - Supprime les clés dont la valeur est `undefined`
- * - Firestore n'accepte pas les valeurs undefined
- */
 function sanitize<T>(obj: T): T {
   if (obj === null || obj === undefined) return obj;
   if (Array.isArray(obj)) {
@@ -41,22 +38,18 @@ function sanitize<T>(obj: T): T {
   return obj;
 }
 
-/** Sauvegarde ou met à jour un document */
 export async function saveDoc<T extends { id: string }>(
   collectionName: CollectionName,
   item: T
 ): Promise<void> {
   try {
     const { id, ...data } = item;
-    const cleanData = sanitize(data);
-    await setDoc(doc(db, collectionName, id), cleanData, { merge: true });
+    await setDoc(doc(db, collectionName, id), sanitize(data), { merge: true });
   } catch (e) {
-    const err = e as FirestoreError;
-    console.error(`❌ saveDoc ${collectionName}:`, err.message);
+    console.error(`❌ saveDoc ${collectionName}:`, (e as FirestoreError).message);
   }
 }
 
-/** Supprime un document */
 export async function removeDoc(
   collectionName: CollectionName,
   id: string
@@ -64,32 +57,40 @@ export async function removeDoc(
   try {
     await deleteDoc(doc(db, collectionName, id));
   } catch (e) {
-    const err = e as FirestoreError;
-    console.error(`❌ removeDoc ${collectionName}:`, err.message);
+    console.error(`❌ removeDoc ${collectionName}:`, (e as FirestoreError).message);
   }
 }
 
-/** Récupère tous les documents d'une collection (one-shot) */
 export async function fetchCollection<T>(
   collectionName: CollectionName
 ): Promise<T[]> {
   try {
-    const snap = await getDocs(collection(db, collectionName));
+    const uid = auth.currentUser?.uid;
+    if (!uid) return [];
+    const q = query(collection(db, collectionName), where("userId", "==", uid));
+    const snap = await getDocs(q);
     return snap.docs.map((d) => ({ ...d.data(), id: d.id } as T));
   } catch (e) {
-    const err = e as FirestoreError;
-    console.error(`❌ fetchCollection ${collectionName}:`, err.message);
+    console.error(`❌ fetchCollection ${collectionName}:`, (e as FirestoreError).message);
     return [];
   }
 }
 
-/** Écoute en temps réel une collection */
+/** Écoute uniquement les documents de l'utilisateur connecté */
 export function subscribeCollection<T>(
   collectionName: CollectionName,
   onChange: (items: T[]) => void
 ): Unsubscribe {
+  const uid = auth.currentUser?.uid;
+  if (!uid) {
+    onChange([]);
+    return () => {};
+  }
+
+  const q = query(collection(db, collectionName), where("userId", "==", uid));
+
   return onSnapshot(
-    collection(db, collectionName),
+    q,
     (snap) => {
       const items = snap.docs.map((d) => ({ ...d.data(), id: d.id } as T));
       onChange(items);

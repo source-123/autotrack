@@ -5,6 +5,17 @@ import {
   Vehicle, Maintenance, Insurance, Inspection, Reminder, Currency,
 } from "../types";
 import { saveDoc, removeDoc, COLLECTIONS } from "./firestore";
+import { auth } from "./firebase";
+
+function currentUserId(): string | null {
+  return auth.currentUser?.uid ?? null;
+}
+
+// Ajoute userId à un objet si on est connecté
+function withUserId<T extends object>(obj: T): T & { userId?: string } {
+  const uid = currentUserId();
+  return uid ? { ...obj, userId: uid } : obj;
+}
 
 type State = {
   currency: Currency;
@@ -14,7 +25,6 @@ type State = {
   inspections: Inspection[];
   reminders: Reminder[];
 
-  // Setters internes (appelés par useFirebaseSync)
   _setVehicles: (v: Vehicle[]) => void;
   _setMaintenances: (m: Maintenance[]) => void;
   _setInsurances: (i: Insurance[]) => void;
@@ -42,6 +52,8 @@ type State = {
   addReminder: (r: Omit<Reminder, "id">) => void;
   toggleReminder: (id: string) => void;
   removeReminder: (id: string) => void;
+
+  clearAll: () => void;
 };
 
 const genId = () =>
@@ -65,15 +77,14 @@ export const useStore = create<State>()(
 
       setCurrency: (currency) => set({ currency }),
 
-      // ============ VEHICLES ============
+      clearAll: () => set({
+        vehicles: [], maintenances: [], insurances: [], inspections: [], reminders: [],
+      }),
+
       addVehicle: (v) => {
-        const item: Vehicle = {
-          ...v,
-          id: genId(),
-          createdAt: new Date().toISOString(),
-        };
-        set((s) => ({ vehicles: [...s.vehicles, item] }));
-        saveDoc(COLLECTIONS.vehicles, item);
+        const item = withUserId({ ...v, id: genId(), createdAt: new Date().toISOString() });
+        set((s) => ({ vehicles: [...s.vehicles, item as any] }));
+        saveDoc(COLLECTIONS.vehicles, item as any);
       },
 
       updateVehicle: (id, v) => {
@@ -81,10 +92,11 @@ export const useStore = create<State>()(
           vehicles: s.vehicles.map((x) => (x.id === id ? { ...x, ...v } : x)),
         }));
         const updated = get().vehicles.find((x) => x.id === id);
-        if (updated) saveDoc(COLLECTIONS.vehicles, updated);
+        if (updated) saveDoc(COLLECTIONS.vehicles, updated as any);
       },
 
       removeVehicle: (id) => {
+        const toRemove = get();
         set((s) => ({
           vehicles: s.vehicles.filter((x) => x.id !== id),
           maintenances: s.maintenances.filter((x) => x.vehicleId !== id),
@@ -93,61 +105,45 @@ export const useStore = create<State>()(
           reminders: s.reminders.filter((x) => x.vehicleId !== id),
         }));
         removeDoc(COLLECTIONS.vehicles, id);
-        // Supprimer aussi les enfants côté Firebase
-        get().maintenances
-          .filter((x) => x.vehicleId === id)
+        toRemove.maintenances.filter((x) => x.vehicleId === id)
           .forEach((x) => removeDoc(COLLECTIONS.maintenances, x.id));
-        get().insurances
-          .filter((x) => x.vehicleId === id)
+        toRemove.insurances.filter((x) => x.vehicleId === id)
           .forEach((x) => removeDoc(COLLECTIONS.insurances, x.id));
-        get().inspections
-          .filter((x) => x.vehicleId === id)
+        toRemove.inspections.filter((x) => x.vehicleId === id)
           .forEach((x) => removeDoc(COLLECTIONS.inspections, x.id));
       },
 
-      // ============ MAINTENANCES ============
       addMaintenance: (m) => {
-        const item: Maintenance = {
-          ...m,
-          id: genId(),
-          createdAt: new Date().toISOString(),
-        };
-        set((s) => ({ maintenances: [...s.maintenances, item] }));
-        saveDoc(COLLECTIONS.maintenances, item);
+        const item = withUserId({ ...m, id: genId(), createdAt: new Date().toISOString() });
+        set((s) => ({ maintenances: [...s.maintenances, item as any] }));
+        saveDoc(COLLECTIONS.maintenances, item as any);
       },
 
       updateMaintenance: (id, m) => {
         set((s) => ({
-          maintenances: s.maintenances.map((x) =>
-            x.id === id ? { ...x, ...m } : x
-          ),
+          maintenances: s.maintenances.map((x) => (x.id === id ? { ...x, ...m } : x)),
         }));
         const updated = get().maintenances.find((x) => x.id === id);
-        if (updated) saveDoc(COLLECTIONS.maintenances, updated);
+        if (updated) saveDoc(COLLECTIONS.maintenances, updated as any);
       },
 
       removeMaintenance: (id) => {
-        set((s) => ({
-          maintenances: s.maintenances.filter((x) => x.id !== id),
-        }));
+        set((s) => ({ maintenances: s.maintenances.filter((x) => x.id !== id) }));
         removeDoc(COLLECTIONS.maintenances, id);
       },
 
-      // ============ INSURANCES ============
       addInsurance: (i) => {
-        const item: Insurance = { ...i, id: genId() };
-        set((s) => ({ insurances: [...s.insurances, item] }));
-        saveDoc(COLLECTIONS.insurances, item);
+        const item = withUserId({ ...i, id: genId() });
+        set((s) => ({ insurances: [...s.insurances, item as any] }));
+        saveDoc(COLLECTIONS.insurances, item as any);
       },
 
       updateInsurance: (id, i) => {
         set((s) => ({
-          insurances: s.insurances.map((x) =>
-            x.id === id ? { ...x, ...i } : x
-          ),
+          insurances: s.insurances.map((x) => (x.id === id ? { ...x, ...i } : x)),
         }));
         const updated = get().insurances.find((x) => x.id === id);
-        if (updated) saveDoc(COLLECTIONS.insurances, updated);
+        if (updated) saveDoc(COLLECTIONS.insurances, updated as any);
       },
 
       removeInsurance: (id) => {
@@ -155,21 +151,18 @@ export const useStore = create<State>()(
         removeDoc(COLLECTIONS.insurances, id);
       },
 
-      // ============ INSPECTIONS ============
       addInspection: (i) => {
-        const item: Inspection = { ...i, id: genId() };
-        set((s) => ({ inspections: [...s.inspections, item] }));
-        saveDoc(COLLECTIONS.inspections, item);
+        const item = withUserId({ ...i, id: genId() });
+        set((s) => ({ inspections: [...s.inspections, item as any] }));
+        saveDoc(COLLECTIONS.inspections, item as any);
       },
 
       updateInspection: (id, i) => {
         set((s) => ({
-          inspections: s.inspections.map((x) =>
-            x.id === id ? { ...x, ...i } : x
-          ),
+          inspections: s.inspections.map((x) => (x.id === id ? { ...x, ...i } : x)),
         }));
         const updated = get().inspections.find((x) => x.id === id);
-        if (updated) saveDoc(COLLECTIONS.inspections, updated);
+        if (updated) saveDoc(COLLECTIONS.inspections, updated as any);
       },
 
       removeInspection: (id) => {
@@ -177,21 +170,18 @@ export const useStore = create<State>()(
         removeDoc(COLLECTIONS.inspections, id);
       },
 
-      // ============ REMINDERS ============
       addReminder: (r) => {
-        const item: Reminder = { ...r, id: genId() };
-        set((s) => ({ reminders: [...s.reminders, item] }));
-        saveDoc(COLLECTIONS.reminders, item);
+        const item = withUserId({ ...r, id: genId() });
+        set((s) => ({ reminders: [...s.reminders, item as any] }));
+        saveDoc(COLLECTIONS.reminders, item as any);
       },
 
       toggleReminder: (id) => {
         set((s) => ({
-          reminders: s.reminders.map((x) =>
-            x.id === id ? { ...x, notified: !x.notified } : x
-          ),
+          reminders: s.reminders.map((x) => x.id === id ? { ...x, notified: !x.notified } : x),
         }));
         const updated = get().reminders.find((x) => x.id === id);
-        if (updated) saveDoc(COLLECTIONS.reminders, updated);
+        if (updated) saveDoc(COLLECTIONS.reminders, updated as any);
       },
 
       removeReminder: (id) => {
@@ -202,7 +192,6 @@ export const useStore = create<State>()(
     {
       name: "autotrack-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      // On ne persiste que la devise en local (le reste vient de Firebase)
       partialize: (state) => ({ currency: state.currency }) as any,
     }
   )
