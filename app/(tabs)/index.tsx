@@ -33,7 +33,7 @@ export default function HomeScreen() {
     totalCost(inspections.filter((i) => i.date >= yearStart));
 
   return (
-    <ScrollView className="flex-1 bg-slate-50">
+    <ScrollView className="flex-1 bg-slate-50 dark:bg-slate-900">
       <View className="p-4">
         <View className="flex-row items-center justify-between mb-5">
           <View className="flex-1">
@@ -57,7 +57,7 @@ export default function HomeScreen() {
             <Text className="text-2xl font-bold text-slate-900 mt-2">
               {vehicles.length}
             </Text>
-            <Text className="text-xs text-slate-500">Véhicules</Text>
+            <Text className="text-xs text-slate-500 dark:text-slate-400">Véhicules</Text>
           </Pressable>
 
           <Pressable
@@ -68,7 +68,7 @@ export default function HomeScreen() {
             <Text className="text-2xl font-bold text-slate-900 mt-2">
               {alerts.length}
             </Text>
-            <Text className="text-xs text-slate-500">Rappels</Text>
+            <Text className="text-xs text-slate-500 dark:text-slate-400">Rappels</Text>
           </Pressable>
 
           <Pressable
@@ -79,7 +79,7 @@ export default function HomeScreen() {
             <Text className="text-2xl font-bold text-slate-900 mt-2">
               {urgentCount}
             </Text>
-            <Text className="text-xs text-slate-500">Urgents</Text>
+            <Text className="text-xs text-slate-500 dark:text-slate-400">Urgents</Text>
           </Pressable>
         </View>
 
@@ -98,21 +98,21 @@ export default function HomeScreen() {
 
         {/* Alertes */}
         <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-lg font-bold text-slate-900">
+          <Text className="text-lg font-bold text-slate-900 dark:text-white">
             Échéances à venir
           </Text>
           {alerts.length > 0 && (
-            <Text className="text-xs text-slate-500">
+            <Text className="text-xs text-slate-500 dark:text-slate-400">
               {urgentCount} urgent{urgentCount > 1 ? "s" : ""} • {soonCount} bientôt
             </Text>
           )}
         </View>
 
         {alerts.length === 0 ? (
-          <View className="bg-white rounded-2xl p-6 border border-slate-200 items-center">
+          <View className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 items-center">
             <CheckCircle2 color="#10b981" size={40} />
-            <Text className="text-slate-900 font-bold mt-3">Tout est à jour !</Text>
-            <Text className="text-slate-500 text-sm text-center mt-1">
+            <Text className="text-slate-900 dark:text-white font-bold mt-3">Tout est à jour !</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-sm text-center mt-1">
               Aucune échéance dans les prochains jours
             </Text>
           </View>
@@ -138,7 +138,7 @@ export default function HomeScreen() {
         {vehicles.length > 0 && (
           <>
             <View className="flex-row items-center justify-between mt-6 mb-3">
-              <Text className="text-lg font-bold text-slate-900">Mes véhicules</Text>
+              <Text className="text-lg font-bold text-slate-900 dark:text-white">Mes véhicules</Text>
               <Pressable onPress={() => router.push("/(tabs)/vehicles")}>
                 <Text className="text-blue-500 text-sm font-semibold">Voir tout</Text>
               </Pressable>
@@ -148,7 +148,7 @@ export default function HomeScreen() {
                 <Pressable
                   key={v.id}
                   onPress={() => router.push(`/vehicle/${v.id}`)}
-                  className="bg-white rounded-2xl border border-slate-200 flex-row items-center overflow-hidden active:bg-slate-100"
+                  className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 flex-row items-center overflow-hidden active:bg-slate-100 dark:active:bg-slate-700"
                 >
                   {/* Miniature photo */}
                   {v.photoUri ? (
@@ -174,11 +174,11 @@ export default function HomeScreen() {
 
                   {/* Infos */}
                   <View className="flex-1 px-4 py-3">
-                    <Text className="font-bold text-slate-900" numberOfLines={1}>
+                    <Text className="font-bold text-slate-900 dark:text-white" numberOfLines={1}>
                       {v.brand} {v.model}
                     </Text>
                     <Text
-                      className="text-xs text-slate-500 mt-1"
+                      className="text-xs text-slate-500 dark:text-slate-400 mt-1"
                       numberOfLines={1}
                       style={{ writingDirection: "ltr" }}
                     >

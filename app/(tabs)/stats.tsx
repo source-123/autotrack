@@ -2,6 +2,7 @@ import { View, Text, ScrollView } from "react-native";
 import { useMemo } from "react";
 import { TrendingUp, Car, Wrench, Shield, ClipboardCheck } from "lucide-react-native";
 import { useStore } from "../../lib/store";
+import { Fuel } from "../../types";
 import { formatMoney } from "../../lib/utils";
 import { Card } from "../../components/ui/Card";
 import { BarChart } from "../../components/charts/BarChart";
@@ -12,6 +13,7 @@ export default function StatsScreen() {
   const maintenances = useStore((s) => s.maintenances);
   const insurances = useStore((s) => s.insurances);
   const inspections = useStore((s) => s.inspections);
+  const fuels = useStore((s) => s.fuels);
   const currency = useStore((s) => s.currency);
 
   // ===== Coût total par mois sur 12 derniers mois =====
@@ -35,23 +37,27 @@ export default function StatsScreen() {
       const inspCost = inspections
         .filter((i) => i.date.startsWith(monthStr))
         .reduce((sum, i) => sum + i.cost, 0);
+      const fuelCost = fuels
+        .filter((f) => f.date.startsWith(monthStr))
+        .reduce((sum, f) => sum + f.totalCost, 0);
 
       months.push({
         label: monthLabels[month],
-        value: maintCost + insCost + inspCost,
+        value: maintCost + insCost + inspCost + fuelCost,
       });
     }
     return months;
-  }, [maintenances, insurances, inspections]);
+  }, [maintenances, insurances, inspections, fuels]);
 
   const totalThisYear = useMemo(() => {
     const yearStart = `${new Date().getFullYear()}-01-01`;
     return (
       maintenances.filter((m) => m.date >= yearStart).reduce((s, m) => s + m.cost, 0) +
       insurances.filter((i) => i.startDate >= yearStart).reduce((s, i) => s + i.cost, 0) +
-      inspections.filter((i) => i.date >= yearStart).reduce((s, i) => s + i.cost, 0)
+      inspections.filter((i) => i.date >= yearStart).reduce((s, i) => s + i.cost, 0) +
+      fuels.filter((f) => f.date >= yearStart).reduce((s, f) => s + f.totalCost, 0)
     );
-  }, [maintenances, insurances, inspections]);
+  }, [maintenances, insurances, inspections, fuels]);
 
   // ===== Répartition par catégorie =====
   const categoryData = useMemo(() => {
@@ -78,7 +84,7 @@ export default function StatsScreen() {
   const totalCategory = categoryData.maintenance + categoryData.insurance + categoryData.inspection || 1;
 
   return (
-    <ScrollView className="flex-1 bg-slate-50">
+    <ScrollView className="flex-1 bg-slate-50 dark:bg-slate-900">
       <View className="p-4 gap-4">
         {/* Total année */}
         <Card className="bg-blue-600" style={{ backgroundColor: "#2563eb" }}>
@@ -98,7 +104,7 @@ export default function StatsScreen() {
 
         {/* Graphique mensuel */}
         <Card>
-          <Text className="text-base font-bold text-slate-900 mb-3">
+          <Text className="text-base font-bold text-slate-900 dark:text-white mb-3">
             Dépenses sur 12 mois
           </Text>
           <BarChart data={monthlyData} height={200} formatValue={(v) => formatMoney(v, currency)} />
@@ -106,7 +112,7 @@ export default function StatsScreen() {
 
         {/* Répartition par catégorie */}
         <Card>
-          <Text className="text-base font-bold text-slate-900 mb-4">
+          <Text className="text-base font-bold text-slate-900 dark:text-white mb-4">
             Répartition {new Date().getFullYear()}
           </Text>
 
@@ -139,7 +145,7 @@ export default function StatsScreen() {
         {/* Top entretiens */}
         {topMaintenances.length > 0 && (
           <Card>
-            <Text className="text-base font-bold text-slate-900 mb-3">
+            <Text className="text-base font-bold text-slate-900 dark:text-white mb-3">
               Top entretiens
             </Text>
             {topMaintenances.map((item) => {
@@ -154,7 +160,7 @@ export default function StatsScreen() {
                       {item.type.replace("_", " ")}
                     </Text>
                   </View>
-                  <Text className="text-slate-900 font-bold text-sm">
+                  <Text className="text-slate-900 dark:text-white font-bold text-sm">
                     {formatMoney(item.cost, currency)}
                   </Text>
                 </View>
@@ -179,10 +185,10 @@ export default function StatsScreen() {
                 inspections.filter((i) => i.vehicleId === v.id).reduce((s, i) => s + i.cost, 0);
               return (
                 <View key={v.id} className="flex-row justify-between py-2 border-b border-slate-100 last:border-0">
-                  <Text className="text-slate-700 font-semibold text-sm">
+                  <Text className="text-slate-700 dark:text-slate-300 font-semibold text-sm">
                     {v.brand} {v.model}
                   </Text>
-                  <Text className="text-slate-900 font-bold text-sm">
+                  <Text className="text-slate-900 dark:text-white font-bold text-sm">
                     {formatMoney(cost, currency)}
                   </Text>
                 </View>
@@ -211,13 +217,13 @@ function CategoryRow({
       <View className="flex-row justify-between items-center mb-2">
         <View className="flex-row items-center gap-2">
           {icon}
-          <Text className="text-slate-700 font-semibold text-sm">{label}</Text>
+          <Text className="text-slate-700 dark:text-slate-300 font-semibold text-sm">{label}</Text>
         </View>
-        <Text className="text-slate-900 font-bold text-sm">
+        <Text className="text-slate-900 dark:text-white font-bold text-sm">
           {formatMoney(value, currency)}
         </Text>
       </View>
-      <View className="bg-slate-100 rounded-full h-2 overflow-hidden">
+      <View className="bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
         <View
           style={{ width: `${pct}%`, backgroundColor: color }}
           className="h-full rounded-full"

@@ -23,16 +23,16 @@ export function Button({
 }: Props) {
   const bg = {
     primary: "bg-blue-600 active:bg-blue-700",
-    secondary: "bg-slate-100 active:bg-slate-200",
+    secondary: "bg-slate-100 dark:bg-slate-700 active:bg-slate-200 dark:active:bg-slate-600",
     danger: "bg-red-500 active:bg-red-600",
-    ghost: "bg-transparent active:bg-slate-100",
+    ghost: "bg-transparent active:bg-slate-100 dark:active:bg-slate-800",
   }[variant];
 
   const txt = {
     primary: "text-white",
-    secondary: "text-slate-900",
+    secondary: "text-slate-900 dark:text-white",
     danger: "text-white",
-    ghost: "text-blue-600",
+    ghost: "text-blue-600 dark:text-blue-400",
   }[variant];
 
   const sz = {
@@ -56,7 +56,9 @@ export function Button({
       } ${className}`}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "primary" || variant === "danger" ? "#fff" : "#3b82f6"} />
+        <ActivityIndicator
+          color={variant === "primary" || variant === "danger" ? "#fff" : "#3b82f6"}
+        />
       ) : (
         <>
           {icon}

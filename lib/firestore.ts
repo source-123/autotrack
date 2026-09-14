@@ -18,6 +18,7 @@ export const COLLECTIONS = {
   insurances: "insurances",
   inspections: "inspections",
   reminders: "reminders",
+  fuels: "fuels",
 } as const;
 
 export type CollectionName = keyof typeof COLLECTIONS;

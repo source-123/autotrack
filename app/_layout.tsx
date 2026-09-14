@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuthStore } from "../lib/authStore";
 import { useFirebaseSync } from "../lib/useFirebaseSync";
 import { useNotifications } from "../lib/useNotifications";
+import { useNativeWindTheme } from "../lib/useNativeWindTheme";
 
 export default function RootLayout() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function RootLayout() {
     _init();
   }, [_init]);
 
+  useNativeWindTheme();
   useFirebaseSync();
   useNotifications();
 

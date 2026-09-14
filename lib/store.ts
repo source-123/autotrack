@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  Vehicle, Maintenance, Insurance, Inspection, Reminder, Currency,
+  Vehicle, Maintenance, Insurance, Inspection, Reminder, Currency, Fuel,
 } from "../types";
 import { saveDoc, removeDoc, COLLECTIONS } from "./firestore";
 import { auth } from "./firebase";
@@ -30,6 +30,7 @@ type State = {
   _setInsurances: (i: Insurance[]) => void;
   _setInspections: (i: Inspection[]) => void;
   _setReminders: (r: Reminder[]) => void;
+  _setFuels: (f: Fuel[]) => void;
 
   setCurrency: (c: Currency) => void;
 
@@ -50,6 +51,9 @@ type State = {
   removeInspection: (id: string) => void;
 
   addReminder: (r: Omit<Reminder, "id">) => void;
+  addFuel: (f: Omit<Fuel, "id">) => void;
+  updateFuel: (id: string, f: Partial<Fuel>) => void;
+  removeFuel: (id: string) => void;
   toggleReminder: (id: string) => void;
   removeReminder: (id: string) => void;
 
@@ -68,17 +72,19 @@ export const useStore = create<State>()(
       insurances: [],
       inspections: [],
       reminders: [],
+      fuels: [],
 
       _setVehicles: (vehicles) => set({ vehicles }),
       _setMaintenances: (maintenances) => set({ maintenances }),
       _setInsurances: (insurances) => set({ insurances }),
       _setInspections: (inspections) => set({ inspections }),
       _setReminders: (reminders) => set({ reminders }),
+      _setFuels: (fuels) => set({ fuels }),
 
       setCurrency: (currency) => set({ currency }),
 
       clearAll: () => set({
-        vehicles: [], maintenances: [], insurances: [], inspections: [], reminders: [],
+        vehicles: [], maintenances: [], insurances: [], inspections: [], reminders: [], fuels: [],
       }),
 
       addVehicle: (v) => {
@@ -187,6 +193,26 @@ export const useStore = create<State>()(
       removeReminder: (id) => {
         set((s) => ({ reminders: s.reminders.filter((x) => x.id !== id) }));
         removeDoc(COLLECTIONS.reminders, id);
+      },
+
+      // ============ FUELS ============
+      addFuel: (f) => {
+        const item = withUserId({ ...f, id: genId() });
+        set((s) => ({ fuels: [...s.fuels, item as any] }));
+        saveDoc(COLLECTIONS.fuels, item as any);
+      },
+
+      updateFuel: (id, f) => {
+        set((s) => ({
+          fuels: s.fuels.map((x) => (x.id === id ? { ...x, ...f } : x)),
+        }));
+        const updated = get().fuels.find((x) => x.id === id);
+        if (updated) saveDoc(COLLECTIONS.fuels, updated as any);
+      },
+
+      removeFuel: (id) => {
+        set((s) => ({ fuels: s.fuels.filter((x) => x.id !== id) }));
+        removeDoc(COLLECTIONS.fuels, id);
       },
     }),
     {

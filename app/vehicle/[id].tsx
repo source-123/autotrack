@@ -4,21 +4,22 @@ import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
   Trash2, Plus, Wrench, Shield, ClipboardCheck, Link2,
-  AlertCircle, Pencil, ArrowLeft,
+  AlertCircle, Pencil, ArrowLeft, Fuel as FuelIcon,
 } from "lucide-react-native";
 import { useStore } from "../../lib/store";
 import { confirmAction } from "../../lib/confirm";
 import { goBackSafely } from "../../lib/navigation";
-import { formatDate, formatMileage, formatMoney, statusFromDate } from "../../lib/utils";
+import { formatDate, formatMileage, formatMoney, statusFromDate, currencySymbol } from "../../lib/utils";
 import { Currency, Inspection, Insurance, Maintenance } from "../../types";
 
-type Tab = "vt" | "assurance" | "entretien" | "chaine";
+type Tab = "vt" | "assurance" | "entretien" | "chaine" | "carburant";
 
 const TABS: { key: Tab; label: string; icon: any }[] = [
   { key: "vt", label: "Visite", icon: ClipboardCheck },
   { key: "assurance", label: "Assurance", icon: Shield },
   { key: "entretien", label: "Entretien", icon: Wrench },
   { key: "chaine", label: "Chaîne", icon: Link2 },
+  { key: "carburant", label: "Carburant", icon: FuelIcon },
 ];
 
 type ListActionProps = {
@@ -39,6 +40,7 @@ export default function VehicleDetailScreen() {
   const allMaintenances = useStore((s) => s.maintenances);
   const allInsurances = useStore((s) => s.insurances);
   const allInspections = useStore((s) => s.inspections);
+  const allFuels = useStore((s) => s.fuels);
   const removeVehicle = useStore((s) => s.removeVehicle);
   const removeMaintenance = useStore((s) => s.removeMaintenance);
   const removeInsurance = useStore((s) => s.removeInsurance);
@@ -58,6 +60,10 @@ export default function VehicleDetailScreen() {
     () => allInspections.filter((i) => i.vehicleId === id),
     [allInspections, id]
   );
+  const fuels = useMemo(
+    () => allFuels.filter((f) => f.vehicleId === id),
+    [allFuels, id]
+  );
 
   if (!vehicle) {
     return (
@@ -76,6 +82,8 @@ export default function VehicleDetailScreen() {
     else if (tab === "assurance") router.push(`/insurance/new?vehicleId=${id}`);
     else if (tab === "entretien" || tab === "chaine")
       router.push(`/maintenance/new?vehicleId=${id}`);
+    else if (tab === "carburant")
+      router.push(`/fuel/new?vehicleId=${id}`);
   };
 
   return (
@@ -203,6 +211,19 @@ export default function VehicleDetailScreen() {
               }
               onDelete={(itemId) =>
                 confirmDelete("Supprimer cet entretien ?", () => removeMaintenance(itemId))
+              }
+            />
+          )}
+          {tab === "carburant" && (
+            <FuelList
+              fuels={fuels}
+              currency={currency}
+              vehicle={vehicle}
+              onEdit={(itemId) =>
+                router.push(`/fuel/new?id=${itemId}&vehicleId=${vehicle.id}`)
+              }
+              onDelete={(itemId) =>
+                confirmDelete("Supprimer ce plein ?", () => useStore.getState().removeFuel(itemId))
               }
             />
           )}
@@ -396,6 +417,85 @@ function MaintenanceList({
             onEdit={() => onEdit(m.id)}
             onDelete={() => onDelete(m.id)}
           />
+        </Card>
+      ))}
+    </>
+  );
+}
+
+function FuelList({
+  fuels, currency, vehicle, onEdit, onDelete,
+}: {
+  fuels: any[];
+  currency: Currency;
+  vehicle: any;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  if (fuels.length === 0) return <Empty label="Aucun plein enregistré" />;
+
+  const sorted = [...fuels].sort((a, b) => b.date.localeCompare(a.date));
+
+  // Calcul conso L/100km
+  const sortedAsc = [...fuels].sort((a, b) => a.mileage - b.mileage);
+  let totalLiters = 0;
+  let totalKm = 0;
+  for (let i = 1; i < sortedAsc.length; i++) {
+    const km = sortedAsc[i].mileage - sortedAsc[i - 1].mileage;
+    if (km > 0 && sortedAsc[i].fullTank) {
+      totalKm += km;
+      totalLiters += sortedAsc[i].liters;
+    }
+  }
+  const avgConsumption = totalKm > 0 ? (totalLiters / totalKm) * 100 : 0;
+
+  const totalSpent = fuels.reduce((sum, f) => sum + f.totalCost, 0);
+
+  return (
+    <>
+      {/* Stats rapides */}
+      <View className="flex-row gap-3">
+        <View className="flex-1 bg-blue-50 dark:bg-blue-900 rounded-2xl p-4 border border-blue-200 dark:border-blue-800">
+          <Text className="text-blue-700 dark:text-blue-300 text-xs uppercase font-semibold">
+            Consommation
+          </Text>
+          <Text className="text-blue-900 dark:text-white text-2xl font-bold mt-1">
+            {avgConsumption.toFixed(1)} L/100
+          </Text>
+        </View>
+        <View className="flex-1 bg-emerald-50 dark:bg-emerald-900 rounded-2xl p-4 border border-emerald-200 dark:border-emerald-800">
+          <Text className="text-emerald-700 dark:text-emerald-300 text-xs uppercase font-semibold">
+            Total dépensé
+          </Text>
+          <Text className="text-emerald-900 dark:text-white text-2xl font-bold mt-1">
+            {formatMoney(totalSpent, currency)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Liste des pleins */}
+      {sorted.map((f) => (
+        <Card key={f.id}>
+          <View className="flex-row justify-between items-start">
+            <View className="flex-1">
+              <Text className="font-bold text-slate-900 dark:text-white text-base">
+                {f.liters} L × {f.pricePerLiter} {currencySymbol(currency)}
+              </Text>
+              <Text className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {formatDate(f.date)}
+              </Text>
+            </View>
+            <Text className="font-bold text-blue-600 text-base">
+              {formatMoney(f.totalCost, currency)}
+            </Text>
+          </View>
+          <Row label="Km" value={formatMileage(f.mileage)} />
+          {f.station && <Row label="Station" value={f.station} />}
+          {!f.fullTank && <Row label="Type" value="Partiel" />}
+          {f.notes && (
+            <Text className="text-slate-500 text-xs mt-2 italic">{f.notes}</Text>
+          )}
+          <CardActions onEdit={() => onEdit(f.id)} onDelete={() => onDelete(f.id)} />
         </Card>
       ))}
     </>

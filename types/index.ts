@@ -71,3 +71,17 @@ export type Reminder = {
   type: "inspection" | "insurance" | "maintenance" | "custom";
   notified: boolean;
 };
+
+
+export type Fuel = {
+  id: string;
+  vehicleId: string;
+  date: string;
+  liters: number;
+  pricePerLiter: number;
+  totalCost: number;
+  mileage: number;
+  station?: string;
+  fullTank: boolean;
+  notes?: string;
+};

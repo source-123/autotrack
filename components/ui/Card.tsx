@@ -4,7 +4,7 @@ export function Card({ children, className = "", ...props }: ViewProps & { class
   return (
     <View
       {...props}
-      className={`bg-white rounded-2xl p-4 border border-slate-200 ${className}`}
+      className={`bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 ${className}`}
       style={[
         {
           shadowColor: "#0f172a",

@@ -73,7 +73,7 @@ export default function ProfileScreen() {
         <View className="bg-white rounded-2xl p-4 border border-zinc-200">
           <View className="flex-row items-center gap-2 mb-3">
             <Bell color="#f59e0b" size={20} />
-            <Text className="text-zinc-900 font-bold">Notifications</Text>
+            <Text className="text-slate-900 dark:text-white font-bold">Notifications</Text>
           </View>
           <Text className="text-zinc-500 text-sm mb-3">
             Rappels automatiques 30, 7 et 1 jour avant chaque échéance.
@@ -96,7 +96,7 @@ export default function ProfileScreen() {
         <View className="bg-white rounded-2xl p-4 border border-zinc-200">
           <View className="flex-row items-center gap-2 mb-3">
             <DollarSign color="#3b82f6" size={20} />
-            <Text className="text-zinc-900 font-bold">Devise</Text>
+            <Text className="text-slate-900 dark:text-white font-bold">Devise</Text>
           </View>
           {CURRENCIES.map((c) => {
             const active = currency === c.code;

@@ -23,12 +23,12 @@ export default function VehiclesScreen() {
         }}
       />
       {vehicles.length === 0 ? (
-        <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+        <View className="flex-1 bg-slate-50 dark:bg-slate-900 items-center justify-center p-6">
           <View className="bg-blue-100 rounded-full p-8 mb-5">
             <Car color="#2563eb" size={56} />
           </View>
-          <Text className="text-2xl font-bold text-slate-900">Aucun véhicule</Text>
-          <Text className="text-slate-500 text-center mt-2 mb-6 max-w-xs">
+          <Text className="text-2xl font-bold text-slate-900 dark:text-white">Aucun véhicule</Text>
+          <Text className="text-slate-500 dark:text-slate-400 text-center mt-2 mb-6 max-w-xs">
             Ajoutez votre premier véhicule pour commencer à suivre son entretien.
           </Text>
           <Button
@@ -42,7 +42,7 @@ export default function VehiclesScreen() {
           data={vehicles}
           keyExtractor={(v) => v.id}
           contentContainerStyle={{ padding: 16, gap: 12 }}
-          className="bg-slate-50"
+          className="bg-slate-50 dark:bg-slate-900"
           renderItem={({ item }) => <VehicleCard vehicle={item} />}
         />
       )}
@@ -56,7 +56,7 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   return (
     <Pressable
       onPress={() => router.push(`/vehicle/${vehicle.id}`)}
-      className="bg-white rounded-2xl border border-slate-200 overflow-hidden active:bg-slate-50"
+      className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden active:bg-slate-50 dark:active:bg-slate-700"
     >
       {hasPhoto ? (
         <Image
@@ -82,11 +82,11 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
       <View className="p-4">
         <View className="flex-row justify-between items-start">
           <View className="flex-1">
-            <Text className="text-lg font-bold text-slate-900">
+            <Text className="text-lg font-bold text-slate-900 dark:text-white">
               {vehicle.brand} {vehicle.model}
             </Text>
             <Text
-              className="text-sm text-slate-500 mt-0.5"
+              className="text-sm text-slate-500 dark:text-slate-400 mt-0.5"
               style={{ writingDirection: "ltr" }}
             >
               {vehicle.plate} • {vehicle.year}
@@ -96,9 +96,9 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             <Text className="text-xs font-bold text-blue-700 uppercase">{vehicle.fuel}</Text>
           </View>
         </View>
-        <View className="mt-3 pt-3 border-t border-slate-100 flex-row justify-between">
-          <Text className="text-slate-500 text-xs">Kilométrage</Text>
-          <Text className="text-slate-900 font-semibold text-sm">
+        <View className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-row justify-between">
+          <Text className="text-slate-500 dark:text-slate-400 text-xs">Kilométrage</Text>
+          <Text className="text-slate-900 dark:text-white font-semibold text-sm">
             {formatMileage(vehicle.mileage)}
           </Text>
         </View>
