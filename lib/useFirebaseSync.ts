@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { subscribeCollection, COLLECTIONS } from "./firestore";
 import { useStore } from "./store";
 import { useAuthStore } from "./authStore";
+import { auth } from "./firebase";
 import { Vehicle, Maintenance, Insurance, Inspection, Reminder } from "../types";
 
 export function useFirebaseSync() {
@@ -14,25 +15,59 @@ export function useFirebaseSync() {
   const clearAll = useStore((s) => s.clearAll);
 
   useEffect(() => {
-    // Si pas connecté, on vide tout
+    // ⛔️ Pas connecté → on vide tout et on n'écoute rien
     if (!user) {
       clearAll();
       return;
     }
 
-    // Sinon on s'abonne à Firestore pour cet utilisateur
-    const unsubVehicles = subscribeCollection<Vehicle>(COLLECTIONS.vehicles, setVehicles);
-    const unsubMaint = subscribeCollection<Maintenance>(COLLECTIONS.maintenances, setMaintenances);
-    const unsubIns = subscribeCollection<Insurance>(COLLECTIONS.insurances, setInsurances);
-    const unsubInsp = subscribeCollection<Inspection>(COLLECTIONS.inspections, setInspections);
-    const unsubRem = subscribeCollection<Reminder>(COLLECTIONS.reminders, setReminders);
+    // ⛔️ Attendre que Firebase Auth ait bien le user en mémoire
+    let unsubs: Array<() => void> = [];
+    let cancelled = false;
+
+    const start = async () => {
+      // Attendre que auth.currentUser soit bien défini
+      const waitForAuth = new Promise<void>((resolve) => {
+        if (auth.currentUser) return resolve();
+        const unsubscribe = auth.onAuthStateChanged((u) => {
+          if (u) {
+            unsubscribe();
+            resolve();
+          }
+        });
+        // timeout de sécurité
+        setTimeout(() => {
+          unsubscribe();
+          resolve();
+        }, 3000);
+      });
+
+      await waitForAuth;
+      if (cancelled) return;
+
+      unsubs.push(
+        subscribeCollection<Vehicle>(COLLECTIONS.vehicles, setVehicles)
+      );
+      unsubs.push(
+        subscribeCollection<Maintenance>(COLLECTIONS.maintenances, setMaintenances)
+      );
+      unsubs.push(
+        subscribeCollection<Insurance>(COLLECTIONS.insurances, setInsurances)
+      );
+      unsubs.push(
+        subscribeCollection<Inspection>(COLLECTIONS.inspections, setInspections)
+      );
+      unsubs.push(
+        subscribeCollection<Reminder>(COLLECTIONS.reminders, setReminders)
+      );
+    };
+
+    start();
 
     return () => {
-      unsubVehicles();
-      unsubMaint();
-      unsubIns();
-      unsubInsp();
-      unsubRem();
+      cancelled = true;
+      unsubs.forEach((fn) => fn());
+      unsubs = [];
     };
   }, [user, setVehicles, setMaintenances, setInsurances, setInspections, setReminders, clearAll]);
 }

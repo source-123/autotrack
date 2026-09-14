@@ -1,9 +1,11 @@
 import { View, Text, FlatList, Pressable } from "react-native";
+import { Image } from "expo-image";
 import { router, Stack } from "expo-router";
-import { Car, Plus } from "lucide-react-native";
+import { Plus, Car } from "lucide-react-native";
 import { useStore } from "../../lib/store";
 import { formatMileage } from "../../lib/utils";
 import { Vehicle } from "../../types";
+import { Button } from "../../components/ui/Button";
 
 export default function VehiclesScreen() {
   const vehicles = useStore((s) => s.vehicles);
@@ -15,34 +17,32 @@ export default function VehiclesScreen() {
           title: "Véhicules",
           headerRight: () => (
             <Pressable onPress={() => router.push("/vehicle/new")} className="mr-4">
-              <Plus color="#3b82f6" size={24} />
+              <Plus color="#2563eb" size={24} />
             </Pressable>
           ),
         }}
       />
       {vehicles.length === 0 ? (
-        <View className="flex-1 bg-zinc-50 items-center justify-center p-6">
-          <View className="bg-blue-100 rounded-full p-6 mb-4">
-            <Car color="#3b82f6" size={56} />
+        <View className="flex-1 bg-slate-50 items-center justify-center p-6">
+          <View className="bg-blue-100 rounded-full p-8 mb-5">
+            <Car color="#2563eb" size={56} />
           </View>
-          <Text className="text-xl font-bold text-zinc-900">Aucun véhicule</Text>
-          <Text className="text-zinc-500 text-center mt-2 mb-6">
+          <Text className="text-2xl font-bold text-slate-900">Aucun véhicule</Text>
+          <Text className="text-slate-500 text-center mt-2 mb-6 max-w-xs">
             Ajoutez votre premier véhicule pour commencer à suivre son entretien.
           </Text>
-          <Pressable
+          <Button
+            title="Ajouter un véhicule"
             onPress={() => router.push("/vehicle/new")}
-            className="bg-blue-500 rounded-xl px-6 py-3 flex-row items-center gap-2"
-          >
-            <Plus color="#fff" size={20} />
-            <Text className="text-white font-bold">Ajouter un véhicule</Text>
-          </Pressable>
+            icon={<Plus color="#fff" size={20} />}
+          />
         </View>
       ) : (
         <FlatList
           data={vehicles}
           keyExtractor={(v) => v.id}
           contentContainerStyle={{ padding: 16, gap: 12 }}
-          className="bg-zinc-50"
+          className="bg-slate-50"
           renderItem={({ item }) => <VehicleCard vehicle={item} />}
         />
       )}
@@ -51,31 +51,54 @@ export default function VehiclesScreen() {
 }
 
 function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
+  const hasPhoto = !!vehicle.photoUri && vehicle.photoUri.length > 0;
+
   return (
     <Pressable
       onPress={() => router.push(`/vehicle/${vehicle.id}`)}
-      className="bg-white rounded-2xl p-4 border border-zinc-200 active:bg-zinc-100"
+      className="bg-white rounded-2xl border border-slate-200 overflow-hidden active:bg-slate-50"
     >
-      <View className="flex-row justify-between items-start">
-        <View className="flex-1">
-          <Text className="text-lg font-bold text-zinc-900">
-            {vehicle.brand} {vehicle.model}
-          </Text>
-          <Text className="text-sm text-zinc-500 mt-1">
-            {vehicle.plate} • {vehicle.year}
+      {hasPhoto ? (
+        <Image
+          source={{ uri: vehicle.photoUri }}
+          style={{ width: "100%", height: 180, backgroundColor: "#e2e8f0" }}
+          contentFit="cover"
+          transition={300}
+        />
+      ) : (
+        <View
+          style={{
+            width: "100%",
+            height: 140,
+            backgroundColor: "#2563eb",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Car color="#fff" size={48} />
+        </View>
+      )}
+
+      <View className="p-4">
+        <View className="flex-row justify-between items-start">
+          <View className="flex-1">
+            <Text className="text-lg font-bold text-slate-900">
+              {vehicle.brand} {vehicle.model}
+            </Text>
+            <Text className="text-sm text-slate-500 mt-0.5">
+              {vehicle.plate} • {vehicle.year}
+            </Text>
+          </View>
+          <View className="bg-blue-100 rounded-full px-3 py-1">
+            <Text className="text-xs font-bold text-blue-700 uppercase">{vehicle.fuel}</Text>
+          </View>
+        </View>
+        <View className="mt-3 pt-3 border-t border-slate-100 flex-row justify-between">
+          <Text className="text-slate-500 text-xs">Kilométrage</Text>
+          <Text className="text-slate-900 font-semibold text-sm">
+            {formatMileage(vehicle.mileage)}
           </Text>
         </View>
-        <View className="bg-blue-100 rounded-lg px-3 py-1">
-          <Text className="text-xs font-bold text-blue-700 uppercase">
-            {vehicle.fuel}
-          </Text>
-        </View>
-      </View>
-      <View className="mt-3 pt-3 border-t border-zinc-100 flex-row justify-between">
-        <Text className="text-zinc-500 text-xs">Kilométrage</Text>
-        <Text className="text-zinc-900 font-semibold text-sm">
-          {formatMileage(vehicle.mileage)}
-        </Text>
       </View>
     </Pressable>
   );
