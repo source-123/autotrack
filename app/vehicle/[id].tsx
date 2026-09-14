@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { useMemo, useState } from "react";
+import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
   Trash2, Plus, Wrench, Shield, ClipboardCheck, Link2,
@@ -107,6 +108,15 @@ export default function VehicleDetailScreen() {
           ),
         }}
       />
+
+      {vehicle.photoUri && (
+        <Image
+          source={{ uri: vehicle.photoUri }}
+          style={{ width: "100%", height: 200, backgroundColor: "#e2e8f0" }}
+          contentFit="cover"
+          transition={300}
+        />
+      )}
 
       <View className="bg-white border-b border-zinc-200 px-4 py-3">
         <Text className="text-zinc-500 text-xs">
