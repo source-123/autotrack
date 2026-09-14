@@ -42,7 +42,7 @@ export function useNativeWindTheme() {
     } else {
       // Mobile : écoute les changements
       const { Appearance } = require("react-native");
-      const sub = Appearance.addChangeListener(({ colorScheme: cs }) => {
+      const sub = Appearance.addChangeListener(({ colorScheme: cs }: { colorScheme: "light" | "dark" | null | undefined }) => {
         const newScheme = cs === "dark" ? "dark" : "light";
         setScheme(newScheme);
         applyScheme(newScheme);

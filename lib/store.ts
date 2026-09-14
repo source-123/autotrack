@@ -11,7 +11,6 @@ function currentUserId(): string | null {
   return auth.currentUser?.uid ?? null;
 }
 
-// Ajoute userId à un objet si on est connecté
 function withUserId<T extends object>(obj: T): T & { userId?: string } {
   const uid = currentUserId();
   return uid ? { ...obj, userId: uid } : obj;
@@ -24,6 +23,7 @@ type State = {
   insurances: Insurance[];
   inspections: Inspection[];
   reminders: Reminder[];
+  fuels: Fuel[];
 
   _setVehicles: (v: Vehicle[]) => void;
   _setMaintenances: (m: Maintenance[]) => void;
@@ -51,11 +51,12 @@ type State = {
   removeInspection: (id: string) => void;
 
   addReminder: (r: Omit<Reminder, "id">) => void;
+  toggleReminder: (id: string) => void;
+  removeReminder: (id: string) => void;
+
   addFuel: (f: Omit<Fuel, "id">) => void;
   updateFuel: (id: string, f: Partial<Fuel>) => void;
   removeFuel: (id: string) => void;
-  toggleReminder: (id: string) => void;
-  removeReminder: (id: string) => void;
 
   clearAll: () => void;
 };
@@ -83,13 +84,20 @@ export const useStore = create<State>()(
 
       setCurrency: (currency) => set({ currency }),
 
-      clearAll: () => set({
-        vehicles: [], maintenances: [], insurances: [], inspections: [], reminders: [], fuels: [],
-      }),
+      clearAll: () =>
+        set({
+          vehicles: [],
+          maintenances: [],
+          insurances: [],
+          inspections: [],
+          reminders: [],
+          fuels: [],
+        }),
 
+      // ============ VEHICLES ============
       addVehicle: (v) => {
         const item = withUserId({ ...v, id: genId(), createdAt: new Date().toISOString() });
-        set((s) => ({ vehicles: [...s.vehicles, item as any] }));
+        set((s) => ({ vehicles: [...s.vehicles, item as Vehicle] }));
         saveDoc(COLLECTIONS.vehicles, item as any);
       },
 
@@ -102,26 +110,30 @@ export const useStore = create<State>()(
       },
 
       removeVehicle: (id) => {
-        const toRemove = get();
+        const snapshot = get();
         set((s) => ({
           vehicles: s.vehicles.filter((x) => x.id !== id),
           maintenances: s.maintenances.filter((x) => x.vehicleId !== id),
           insurances: s.insurances.filter((x) => x.vehicleId !== id),
           inspections: s.inspections.filter((x) => x.vehicleId !== id),
           reminders: s.reminders.filter((x) => x.vehicleId !== id),
+          fuels: s.fuels.filter((x) => x.vehicleId !== id),
         }));
         removeDoc(COLLECTIONS.vehicles, id);
-        toRemove.maintenances.filter((x) => x.vehicleId === id)
+        snapshot.maintenances.filter((x) => x.vehicleId === id)
           .forEach((x) => removeDoc(COLLECTIONS.maintenances, x.id));
-        toRemove.insurances.filter((x) => x.vehicleId === id)
+        snapshot.insurances.filter((x) => x.vehicleId === id)
           .forEach((x) => removeDoc(COLLECTIONS.insurances, x.id));
-        toRemove.inspections.filter((x) => x.vehicleId === id)
+        snapshot.inspections.filter((x) => x.vehicleId === id)
           .forEach((x) => removeDoc(COLLECTIONS.inspections, x.id));
+        snapshot.fuels.filter((x) => x.vehicleId === id)
+          .forEach((x) => removeDoc(COLLECTIONS.fuels, x.id));
       },
 
+      // ============ MAINTENANCES ============
       addMaintenance: (m) => {
         const item = withUserId({ ...m, id: genId(), createdAt: new Date().toISOString() });
-        set((s) => ({ maintenances: [...s.maintenances, item as any] }));
+        set((s) => ({ maintenances: [...s.maintenances, item as Maintenance] }));
         saveDoc(COLLECTIONS.maintenances, item as any);
       },
 
@@ -138,9 +150,10 @@ export const useStore = create<State>()(
         removeDoc(COLLECTIONS.maintenances, id);
       },
 
+      // ============ INSURANCES ============
       addInsurance: (i) => {
         const item = withUserId({ ...i, id: genId() });
-        set((s) => ({ insurances: [...s.insurances, item as any] }));
+        set((s) => ({ insurances: [...s.insurances, item as Insurance] }));
         saveDoc(COLLECTIONS.insurances, item as any);
       },
 
@@ -157,9 +170,10 @@ export const useStore = create<State>()(
         removeDoc(COLLECTIONS.insurances, id);
       },
 
+      // ============ INSPECTIONS ============
       addInspection: (i) => {
         const item = withUserId({ ...i, id: genId() });
-        set((s) => ({ inspections: [...s.inspections, item as any] }));
+        set((s) => ({ inspections: [...s.inspections, item as Inspection] }));
         saveDoc(COLLECTIONS.inspections, item as any);
       },
 
@@ -176,15 +190,18 @@ export const useStore = create<State>()(
         removeDoc(COLLECTIONS.inspections, id);
       },
 
+      // ============ REMINDERS ============
       addReminder: (r) => {
         const item = withUserId({ ...r, id: genId() });
-        set((s) => ({ reminders: [...s.reminders, item as any] }));
+        set((s) => ({ reminders: [...s.reminders, item as Reminder] }));
         saveDoc(COLLECTIONS.reminders, item as any);
       },
 
       toggleReminder: (id) => {
         set((s) => ({
-          reminders: s.reminders.map((x) => x.id === id ? { ...x, notified: !x.notified } : x),
+          reminders: s.reminders.map((x) =>
+            x.id === id ? { ...x, notified: !x.notified } : x
+          ),
         }));
         const updated = get().reminders.find((x) => x.id === id);
         if (updated) saveDoc(COLLECTIONS.reminders, updated as any);
@@ -198,7 +215,7 @@ export const useStore = create<State>()(
       // ============ FUELS ============
       addFuel: (f) => {
         const item = withUserId({ ...f, id: genId() });
-        set((s) => ({ fuels: [...s.fuels, item as any] }));
+        set((s) => ({ fuels: [...s.fuels, item as Fuel] }));
         saveDoc(COLLECTIONS.fuels, item as any);
       },
 
