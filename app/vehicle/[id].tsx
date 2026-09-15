@@ -1,10 +1,10 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { useMemo, useState } from "react";
 import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
   Trash2, Plus, Wrench, Shield, ClipboardCheck, Link2,
-  AlertCircle, Pencil, ArrowLeft, Fuel as FuelIcon,
+  AlertCircle, Pencil, ArrowLeft, Fuel as FuelIcon, FileText, History, Download,
 } from "lucide-react-native";
 import { useStore } from "../../lib/store";
 import { confirmAction } from "../../lib/confirm";
@@ -12,8 +12,9 @@ import { goBackSafely } from "../../lib/navigation";
 import { formatDate, formatMileage, formatMoney, statusFromDate, currencySymbol } from "../../lib/utils";
 import { Currency, Inspection, Insurance, Maintenance } from "../../types";
 import { useTranslation } from "../../lib/useTranslation";
+import { exportVehicleToPdf } from "../../lib/exportPdf";
 
-type Tab = "vt" | "assurance" | "entretien" | "chaine" | "carburant";
+type Tab = "vt" | "assurance" | "entretien" | "chaine" | "carburant" | "documents" | "historique";
 
 type ListActionProps = {
   onEdit: (id: string) => void;
@@ -26,7 +27,7 @@ type CardActionProps = {
 };
 
 export default function VehicleDetailScreen() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [tab, setTab] = useState<Tab>("vt");
 
@@ -36,6 +37,8 @@ export default function VehicleDetailScreen() {
     { key: "entretien", label: t("tabMaintenance"), icon: Wrench },
     { key: "chaine", label: t("tabChain"), icon: Link2 },
     { key: "carburant", label: t("tabFuel"), icon: FuelIcon },
+    { key: "documents", label: t("tabDocuments"), icon: FileText },
+    { key: "historique", label: t("tabHistory"), icon: History },
   ];
 
   const vehicles = useStore((s) => s.vehicles);
@@ -43,11 +46,13 @@ export default function VehicleDetailScreen() {
   const allInsurances = useStore((s) => s.insurances);
   const allInspections = useStore((s) => s.inspections);
   const allFuels = useStore((s) => s.fuels);
+  const allDocuments = useStore((s) => s.documents);
   const removeVehicle = useStore((s) => s.removeVehicle);
   const removeMaintenance = useStore((s) => s.removeMaintenance);
   const removeInsurance = useStore((s) => s.removeInsurance);
   const removeInspection = useStore((s) => s.removeInspection);
   const removeFuel = useStore((s) => s.removeFuel);
+  const removeDocument = useStore((s) => s.removeDocument);
   const currency = useStore((s) => s.currency);
 
   const vehicle = useMemo(() => vehicles.find((v) => v.id === id), [vehicles, id]);
@@ -56,6 +61,11 @@ export default function VehicleDetailScreen() {
   const inspections = useMemo(() => allInspections.filter((i) => i.vehicleId === id), [allInspections, id]);
   const fuels = useMemo(() => allFuels.filter((f) => f.vehicleId === id), [allFuels, id]);
 
+
+  const documents = useMemo(
+    () => allDocuments.filter((d) => d.vehicleId === id),
+    [allDocuments, id]
+  );
   if (!vehicle) {
     return (
       <View className="flex-1 items-center justify-center bg-slate-50 dark:bg-slate-900">
@@ -63,6 +73,23 @@ export default function VehicleDetailScreen() {
       </View>
     );
   }
+
+  const handleExportPdf = async () => {
+    try {
+      await exportVehicleToPdf({
+        vehicle,
+        maintenances,
+        insurances,
+        inspections,
+        fuels,
+        documents,
+        currency,
+        language: lang,
+      });
+    } catch (e: any) {
+      Alert.alert("Erreur", e?.message || "");
+    }
+  };
 
   const confirmDelete = (title: string, onConfirm: () => void) => {
     confirmAction(title, t("irreversibleAction"), onConfirm);
@@ -73,6 +100,7 @@ export default function VehicleDetailScreen() {
     else if (tab === "assurance") router.push(`/insurance/new?vehicleId=${id}`);
     else if (tab === "entretien" || tab === "chaine") router.push(`/maintenance/new?vehicleId=${id}`);
     else if (tab === "carburant") router.push(`/fuel/new?vehicleId=${id}`);
+    else if (tab === "documents") router.push(`/document/new?vehicleId=${id}`);
   };
 
   return (
@@ -88,6 +116,9 @@ export default function VehicleDetailScreen() {
           ),
           headerRight: () => (
             <View className="flex-row mr-3 gap-3">
+              <Pressable onPress={handleExportPdf}>
+                <Download color="#10b981" size={22} />
+              </Pressable>
               <Pressable onPress={() => router.push(`/vehicle/new?id=${vehicle.id}`)}>
                 <Pencil color="#3b82f6" size={22} />
               </Pressable>
@@ -183,6 +214,26 @@ export default function VehicleDetailScreen() {
               currency={currency}
               onEdit={(itemId) => router.push(`/fuel/new?id=${itemId}&vehicleId=${vehicle.id}`)}
               onDelete={(itemId) => confirmDelete(t("delete"), () => removeFuel(itemId))}
+            />
+          )}
+
+          {tab === "documents" && (
+            <DocumentsList
+              documents={documents}
+              onEdit={(itemId) => router.push(`/document/new?id=${itemId}&vehicleId=${vehicle.id}`)}
+              onDelete={(itemId) => confirmDelete(t("delete"), () => removeDocument(itemId))}
+            />
+          )}
+
+          {tab === "historique" && (
+            <HistoryList
+              vehicle={vehicle}
+              maintenances={maintenances}
+              insurances={insurances}
+              inspections={inspections}
+              fuels={fuels}
+              documents={documents}
+              currency={currency}
             />
           )}
 
@@ -369,6 +420,226 @@ function FuelList({ fuels, currency, onEdit, onDelete }: { fuels: any[]; currenc
           <CardActions onEdit={() => onEdit(f.id)} onDelete={() => onDelete(f.id)} />
         </Card>
       ))}
+    </>
+  );
+}
+
+function DocumentsList({ documents, onEdit, onDelete }: { documents: any[]; onEdit: (id: string) => void; onDelete: (id: string) => void }) {
+  const { t } = useTranslation();
+  if (documents.length === 0) return <Empty label={t("noDocument")} />;
+  const sorted = [...documents].sort((a, b) => b.date.localeCompare(a.date));
+
+  return (
+    <>
+      {sorted.map((doc) => {
+        const status = doc.expiryDate ? statusFromDate(doc.expiryDate) : null;
+        const statusLabel = status === "expired" ? t("expiredDoc") : status === "soon" ? t("soon") : null;
+        const statusBg = status === "expired" ? "bg-red-100 dark:bg-red-900" : status === "soon" ? "bg-amber-100 dark:bg-amber-900" : "";
+        const statusText = status === "expired" ? "text-red-700 dark:text-red-200" : status === "soon" ? "text-amber-700 dark:text-amber-200" : "";
+
+        return (
+          <Card key={doc.id}>
+            <View className="flex-row items-start gap-3">
+              {doc.fileType === "image" ? (
+                <Image source={{ uri: doc.fileUrl }} style={{ width: 60, height: 60, borderRadius: 8 }} contentFit="cover" />
+              ) : (
+                <View className="w-14 h-14 rounded-lg bg-blue-100 dark:bg-blue-900 items-center justify-center">
+                  <FileText color="#2563eb" size={28} />
+                </View>
+              )}
+              <View className="flex-1">
+                <View className="flex-row items-center gap-2 flex-wrap">
+                  <Text className="font-bold text-slate-900 dark:text-white flex-1" numberOfLines={1}>{doc.title}</Text>
+                  {statusLabel && (
+                    <View className={`rounded-lg px-2 py-0.5 ${statusBg}`}>
+                      <Text className={`text-xs font-bold uppercase ${statusText}`}>{statusLabel}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-1" style={{ writingDirection: "ltr" }}>{formatDate(doc.date)}</Text>
+                {doc.expiryDate && (
+                  <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5" style={{ writingDirection: "ltr" }}>
+                    {t("expiresOn")} {formatDate(doc.expiryDate)}
+                  </Text>
+                )}
+              </View>
+            </View>
+            {doc.notes && <Text className="text-slate-500 dark:text-slate-400 text-xs mt-2 italic">{doc.notes}</Text>}
+            <CardActions onEdit={() => onEdit(doc.id)} onDelete={() => onDelete(doc.id)} />
+          </Card>
+        );
+      })}
+    </>
+  );
+}
+
+function HistoryList({
+  vehicle, maintenances, insurances, inspections, fuels, documents, currency,
+}: {
+  vehicle: any;
+  maintenances: any[];
+  insurances: any[];
+  inspections: any[];
+  fuels: any[];
+  documents: any[];
+  currency: Currency;
+}) {
+  const { t } = useTranslation();
+  const [filter, setFilter] = useState<string>("all");
+
+  // Fusionner tous les événements
+  type Event = {
+    id: string;
+    date: string;
+    type: "maintenance" | "insurance" | "inspection" | "fuel" | "document";
+    title: string;
+    subtitle: string;
+    amount?: number;
+    icon: any;
+    color: string;
+  };
+
+  const events: Event[] = [];
+
+  for (const m of maintenances) {
+    events.push({
+      id: `m-${m.id}`,
+      date: m.date,
+      type: "maintenance",
+      title: m.type.replace("_", " "),
+      subtitle: `${formatMileage(m.mileage)}${m.garage ? " • " + m.garage : ""}`,
+      amount: m.cost,
+      icon: Wrench,
+      color: "#8b5cf6",
+    });
+  }
+  for (const i of insurances) {
+    events.push({
+      id: `i-${i.id}`,
+      date: i.startDate,
+      type: "insurance",
+      title: i.company,
+      subtitle: `${t("endDate")}: ${formatDate(i.endDate)}`,
+      amount: i.cost,
+      icon: Shield,
+      color: "#3b82f6",
+    });
+  }
+  for (const v of inspections) {
+    events.push({
+      id: `v-${v.id}`,
+      date: v.date,
+      type: "inspection",
+      title: t("inspectionTitle"),
+      subtitle: v.result === "pass" ? t("favorable") : t("unfavorable"),
+      amount: v.cost,
+      icon: ClipboardCheck,
+      color: v.result === "pass" ? "#10b981" : "#ef4444",
+    });
+  }
+  for (const f of fuels) {
+    events.push({
+      id: `f-${f.id}`,
+      date: f.date,
+      type: "fuel",
+      title: `${f.liters} L × ${f.pricePerLiter}`,
+      subtitle: formatMileage(f.mileage),
+      amount: f.totalCost,
+      icon: FuelIcon,
+      color: "#f59e0b",
+    });
+  }
+  for (const d of documents) {
+    events.push({
+      id: `d-${d.id}`,
+      date: d.date,
+      type: "document",
+      title: d.title,
+      subtitle: d.category.replace("_", " "),
+      icon: FileText,
+      color: "#64748b",
+    });
+  }
+
+  const filtered = filter === "all" ? events : events.filter((e) => e.type === filter);
+  const sorted = filtered.sort((a, b) => b.date.localeCompare(a.date));
+
+  // Total dépensé
+  const total = events.reduce((s, e) => s + (e.amount || 0), 0);
+
+  const FILTERS = [
+    { key: "all", label: t("filterAll") },
+    { key: "maintenance", label: t("tabMaintenance") },
+    { key: "insurance", label: t("tabInsurance") },
+    { key: "inspection", label: t("tabInspection") },
+    { key: "fuel", label: t("tabFuel") },
+    { key: "document", label: t("tabDocuments") },
+  ];
+
+  return (
+    <>
+      {/* Total */}
+      <View className="bg-blue-600 rounded-2xl p-4 mb-3">
+        <Text className="text-blue-100 text-xs uppercase font-semibold">{t("totalCost")}</Text>
+        <Text className="text-white text-2xl font-bold mt-1">{formatMoney(total, currency)}</Text>
+        <Text className="text-blue-100 text-xs mt-1">{events.length} {t("search").toLowerCase()}</Text>
+      </View>
+
+      {/* Filtres */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
+        <View className="flex-row gap-2">
+          {FILTERS.map((f) => (
+            <Pressable
+              key={f.key}
+              onPress={() => setFilter(f.key)}
+              className={`px-3 py-2 rounded-full border ${
+                filter === f.key ? "bg-blue-600 border-blue-600" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+              }`}
+            >
+              <Text className={`text-xs font-semibold ${filter === f.key ? "text-white" : "text-slate-700 dark:text-slate-300"}`}>
+                {f.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+
+      {sorted.length === 0 ? (
+        <Empty label={t("noReminders")} />
+      ) : (
+        <View className="gap-2">
+          {sorted.map((e) => {
+            const Icon = e.icon;
+            return (
+              <View
+                key={e.id}
+                className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex-row items-start gap-3"
+              >
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center"
+                  style={{ backgroundColor: e.color + "20" }}
+                >
+                  <Icon color={e.color} size={20} />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-bold text-slate-900 dark:text-white capitalize" numberOfLines={1}>
+                    {e.title}
+                  </Text>
+                  <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5" numberOfLines={1}>
+                    {e.subtitle}
+                  </Text>
+                  <Text className="text-xs text-slate-400 mt-0.5">{formatDate(e.date)}</Text>
+                </View>
+                {e.amount !== undefined && e.amount > 0 && (
+                  <Text className="font-bold text-blue-600 dark:text-blue-400 text-sm">
+                    {formatMoney(e.amount, currency)}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      )}
     </>
   );
 }

@@ -3,7 +3,7 @@ import { subscribeCollection, COLLECTIONS } from "./firestore";
 import { useStore } from "./store";
 import { useAuthStore } from "./authStore";
 import { auth } from "./firebase";
-import { Vehicle, Maintenance, Insurance, Inspection, Reminder, Fuel } from "../types";
+import { Vehicle, Maintenance, Insurance, Inspection, Reminder, Fuel, VehicleDocument } from "../types";
 
 export function useFirebaseSync() {
   const user = useAuthStore((s) => s.user);
@@ -13,6 +13,7 @@ export function useFirebaseSync() {
   const setInspections = useStore((s) => s._setInspections);
   const setReminders = useStore((s) => s._setReminders);
   const setFuels = useStore((s) => s._setFuels);
+  const setDocuments = useStore((s) => s._setDocuments);
   const clearAll = useStore((s) => s.clearAll);
 
   useEffect(() => {
@@ -64,6 +65,9 @@ export function useFirebaseSync() {
       unsubs.push(
         subscribeCollection<Fuel>(COLLECTIONS.fuels, setFuels)
       );
+      unsubs.push(
+        subscribeCollection<VehicleDocument>(COLLECTIONS.documents, setDocuments)
+      );
     };
 
     start();
@@ -73,5 +77,5 @@ export function useFirebaseSync() {
       unsubs.forEach((fn) => fn());
       unsubs = [];
     };
-  }, [user, setVehicles, setMaintenances, setInsurances, setInspections, setReminders, setFuels, clearAll]);
+  }, [user, setVehicles, setMaintenances, setInsurances, setInspections, setReminders, setFuels, setDocuments, clearAll]);
 }

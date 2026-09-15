@@ -85,3 +85,26 @@ export type Fuel = {
   fullTank: boolean;
   notes?: string;
 };
+
+
+export type DocumentCategory =
+  | "assurance"
+  | "visite_technique"
+  | "carte_grise"
+  | "facture_entretien"
+  | "facture_reparation"
+  | "pneus"
+  | "autre";
+
+export type VehicleDocument = {
+  id: string;
+  vehicleId: string;
+  category: DocumentCategory;
+  title: string;
+  fileUrl: string;
+  fileType: "image" | "pdf";
+  date: string;
+  expiryDate?: string;
+  notes?: string;
+  createdAt: string;
+};

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  Vehicle, Maintenance, Insurance, Inspection, Reminder, Currency, Fuel,
+  Vehicle, Maintenance, Insurance, Inspection, Reminder, Currency, Fuel, VehicleDocument,
 } from "../types";
 import { saveDoc, removeDoc, COLLECTIONS } from "./firestore";
 import { auth } from "./firebase";
@@ -25,6 +25,7 @@ type State = {
   inspections: Inspection[];
   reminders: Reminder[];
   fuels: Fuel[];
+  documents: VehicleDocument[];
 
   _setVehicles: (v: Vehicle[]) => void;
   _setMaintenances: (m: Maintenance[]) => void;
@@ -32,6 +33,7 @@ type State = {
   _setInspections: (i: Inspection[]) => void;
   _setReminders: (r: Reminder[]) => void;
   _setFuels: (f: Fuel[]) => void;
+  _setDocuments: (d: VehicleDocument[]) => void;
 
   setCurrency: (c: Currency) => void;
   setLanguage: (l: "fr" | "ar") => void;
@@ -59,6 +61,9 @@ type State = {
   addFuel: (f: Omit<Fuel, "id">) => void;
   updateFuel: (id: string, f: Partial<Fuel>) => void;
   removeFuel: (id: string) => void;
+  addDocument: (d: Omit<VehicleDocument, "id" | "createdAt">) => void;
+  updateDocument: (id: string, d: Partial<VehicleDocument>) => void;
+  removeDocument: (id: string) => void;
 
   clearAll: () => void;
 };
@@ -77,6 +82,7 @@ export const useStore = create<State>()(
       inspections: [],
       reminders: [],
       fuels: [],
+      documents: [],
 
       _setVehicles: (vehicles) => set({ vehicles }),
       _setMaintenances: (maintenances) => set({ maintenances }),
@@ -84,6 +90,7 @@ export const useStore = create<State>()(
       _setInspections: (inspections) => set({ inspections }),
       _setReminders: (reminders) => set({ reminders }),
       _setFuels: (fuels) => set({ fuels }),
+      _setDocuments: (documents) => set({ documents }),
 
       setCurrency: (currency) => set({ currency }),
       setLanguage: (language) => set({ language }),
@@ -122,6 +129,7 @@ export const useStore = create<State>()(
           inspections: s.inspections.filter((x) => x.vehicleId !== id),
           reminders: s.reminders.filter((x) => x.vehicleId !== id),
           fuels: s.fuels.filter((x) => x.vehicleId !== id),
+          documents: s.documents.filter((x) => x.vehicleId !== id),
         }));
         removeDoc(COLLECTIONS.vehicles, id);
         snapshot.maintenances.filter((x) => x.vehicleId === id)
@@ -234,6 +242,26 @@ export const useStore = create<State>()(
       removeFuel: (id) => {
         set((s) => ({ fuels: s.fuels.filter((x) => x.id !== id) }));
         removeDoc(COLLECTIONS.fuels, id);
+      },
+
+      // ============ DOCUMENTS ============
+      addDocument: (d) => {
+        const item = withUserId({ ...d, id: genId(), createdAt: new Date().toISOString() });
+        set((s) => ({ documents: [...s.documents, item as VehicleDocument] }));
+        saveDoc(COLLECTIONS.documents, item as any);
+      },
+
+      updateDocument: (id, d) => {
+        set((s) => ({
+          documents: s.documents.map((x) => (x.id === id ? { ...x, ...d } : x)),
+        }));
+        const updated = get().documents.find((x) => x.id === id);
+        if (updated) saveDoc(COLLECTIONS.documents, updated as any);
+      },
+
+      removeDocument: (id) => {
+        set((s) => ({ documents: s.documents.filter((x) => x.id !== id) }));
+        removeDoc(COLLECTIONS.documents, id);
       },
     }),
     {
