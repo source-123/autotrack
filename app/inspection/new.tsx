@@ -1,10 +1,12 @@
-import { View, Text, TextInput, ScrollView, Pressable, Alert } from "react-native";
+import { View, Text, ScrollView, TextInput, Pressable, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { goBackSafely } from "../../lib/navigation";
 import { useStore } from "../../lib/store";
+import { goBackSafely } from "../../lib/navigation";
+import { useTranslation } from "../../lib/useTranslation";
 
 export default function InspectionFormScreen() {
+  const { t } = useTranslation();
   const { vehicleId, id } = useLocalSearchParams<{ vehicleId: string; id?: string }>();
   const isEdit = !!id;
 
@@ -32,7 +34,7 @@ export default function InspectionFormScreen() {
 
   const handleSave = () => {
     if (!expiryDate) {
-      Alert.alert("Champ manquant", "La date d'expiration est obligatoire.");
+      Alert.alert(t("missingFields"), t("expirationDate"));
       return;
     }
     const data = {
@@ -51,54 +53,54 @@ export default function InspectionFormScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: isEdit ? "Modifier la visite" : "Visite technique", headerShown: true }} />
-      <ScrollView className="flex-1 bg-zinc-50">
+      <Stack.Screen options={{ title: isEdit ? t("edit") : t("inspectionTitle"), headerShown: true }} />
+      <ScrollView className="flex-1 bg-slate-50 dark:bg-slate-900">
         <View className="p-4 gap-4">
-          <Field label="Date du contrôle">
+          <Field label={t("inspectionDate")}>
             <TextInput value={date} onChangeText={setDate} placeholder="AAAA-MM-JJ"
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Date d'expiration *">
+          <Field label={`${t("expirationDate")} *`}>
             <TextInput value={expiryDate} onChangeText={setExpiryDate} placeholder="AAAA-MM-JJ"
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Résultat">
+          <Field label={t("result")}>
             <View className="flex-row gap-2">
               <Pressable onPress={() => setResult("pass")}
-                className={`flex-1 py-3 rounded-xl border ${result === "pass" ? "bg-green-500 border-green-500" : "bg-white border-zinc-200"}`}>
-                <Text className={result === "pass" ? "text-white font-bold text-center" : "text-zinc-700 text-center"}>
-                  ✅ Favorable
+                className={`flex-1 py-3 rounded-xl border ${result === "pass" ? "bg-green-500 border-green-500" : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600"}`}>
+                <Text className={result === "pass" ? "text-white font-bold text-center" : "text-slate-700 dark:text-slate-200 text-center"}>
+                  {t("favorable")}
                 </Text>
               </Pressable>
               <Pressable onPress={() => setResult("fail")}
-                className={`flex-1 py-3 rounded-xl border ${result === "fail" ? "bg-red-500 border-red-500" : "bg-white border-zinc-200"}`}>
-                <Text className={result === "fail" ? "text-white font-bold text-center" : "text-zinc-700 text-center"}>
-                  ❌ Défavorable
+                className={`flex-1 py-3 rounded-xl border ${result === "fail" ? "bg-red-500 border-red-500" : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600"}`}>
+                <Text className={result === "fail" ? "text-white font-bold text-center" : "text-slate-700 dark:text-slate-200 text-center"}>
+                  {t("unfavorable")}
                 </Text>
               </Pressable>
             </View>
           </Field>
 
-          <Field label="Coût">
+          <Field label={t("cost")}>
             <TextInput value={cost} onChangeText={setCost} keyboardType="decimal-pad" placeholder="85"
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Centre (optionnel)">
+          <Field label={`${t("center")} (${t("optional")})`}>
             <TextInput value={center} onChangeText={setCenter} placeholder="Dekra, Autosur..."
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Notes (optionnel)">
-            <TextInput value={notes} onChangeText={setNotes} multiline numberOfLines={3} placeholder="Défauts mineurs..."
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+          <Field label={`${t("notes")} (${t("optional")})`}>
+            <TextInput value={notes} onChangeText={setNotes} multiline numberOfLines={3}
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Pressable onPress={handleSave} className="bg-blue-500 rounded-xl py-4 mt-4 active:bg-blue-600">
+          <Pressable onPress={handleSave} className="bg-blue-600 rounded-xl py-4 mt-4 active:bg-blue-700">
             <Text className="text-white text-center font-bold text-base">
-              {isEdit ? "Mettre à jour" : "Enregistrer"}
+              {isEdit ? t("update") : t("save")}
             </Text>
           </Pressable>
         </View>
@@ -110,7 +112,7 @@ export default function InspectionFormScreen() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View className="gap-2">
-      <Text className="text-sm font-semibold text-zinc-700">{label}</Text>
+      <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</Text>
       {children}
     </View>
   );

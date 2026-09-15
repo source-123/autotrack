@@ -1,8 +1,21 @@
 import { LogBox } from "react-native";
 
-// Warning connu et inoffensif : Expo Router tente un GO_BACK sans historique
-// (arrive surtout sur web après redirection d'authentification)
 LogBox.ignoreLogs([
+  // Expo Router : GO_BACK sans historique (inoffensif)
   "The action 'GO_BACK' was not handled by any navigator",
-  "Non-serializable values were found in the navigation state",
+
+  // Notifications sur web
+  "[expo-notifications] Listening to push token changes is not yet fully supported on web",
+
+  // Style shadow déprécié (web uniquement)
+  '"shadow*" style props are deprecated',
+
+  // Accessibilité web
+  "Blocked aria-hidden",
+
+  // React Native Web
+  "Cannot record touch end without a touch start",
+
+  // Images lazy (Chrome)
+  "[Intervention] Images loaded lazily",
 ]);

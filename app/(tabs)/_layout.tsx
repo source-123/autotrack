@@ -3,11 +3,13 @@ import { Home, Car, Bell, User, BarChart3 } from "lucide-react-native";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "react-native";
+import { useTranslation } from "../../lib/useTranslation";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
+  const { t } = useTranslation();
 
   const bottomPadding = Platform.OS === "web" ? 8 : Math.max(insets.bottom, 8);
   const tabBarHeight = 60 + bottomPadding;
@@ -33,11 +35,11 @@ export default function TabsLayout() {
         tabBarItemStyle: { paddingVertical: 4 },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Accueil", tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }} />
-      <Tabs.Screen name="vehicles" options={{ title: "Véhicules", tabBarIcon: ({ color, size }) => <Car color={color} size={size} /> }} />
-      <Tabs.Screen name="stats" options={{ title: "Stats", tabBarIcon: ({ color, size }) => <BarChart3 color={color} size={size} /> }} />
-      <Tabs.Screen name="reminders" options={{ title: "Rappels", tabBarIcon: ({ color, size }) => <Bell color={color} size={size} /> }} />
-      <Tabs.Screen name="profile" options={{ title: "Profil", tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }} />
+      <Tabs.Screen name="index" options={{ title: t("tabHome"), tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }} />
+      <Tabs.Screen name="vehicles" options={{ title: t("tabVehicles"), tabBarIcon: ({ color, size }) => <Car color={color} size={size} /> }} />
+      <Tabs.Screen name="stats" options={{ title: t("tabStats"), tabBarIcon: ({ color, size }) => <BarChart3 color={color} size={size} /> }} />
+      <Tabs.Screen name="reminders" options={{ title: t("tabReminders"), tabBarIcon: ({ color, size }) => <Bell color={color} size={size} /> }} />
+      <Tabs.Screen name="profile" options={{ title: t("tabProfile"), tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }} />
     </Tabs>
   );
 }

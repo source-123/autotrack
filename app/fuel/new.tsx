@@ -6,8 +6,10 @@ import { goBackSafely } from "../../lib/navigation";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { useTranslation } from "../../lib/useTranslation";
 
 export default function FuelFormScreen() {
+  const { t } = useTranslation();
   const { vehicleId, id } = useLocalSearchParams<{ vehicleId: string; id?: string }>();
   const isEdit = !!id;
 
@@ -43,7 +45,7 @@ export default function FuelFormScreen() {
 
   const handleSave = () => {
     if (!liters.trim() || !pricePerLiter.trim() || !mileage.trim()) {
-      Alert.alert("Champs manquants", "Litres, prix/L et km sont obligatoires.");
+      Alert.alert(t("missingFields"), `${t("liters")}, ${t("pricePerLiter")}, ${t("mileage")}`);
       return;
     }
 
@@ -67,7 +69,7 @@ export default function FuelFormScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: isEdit ? "Modifier le plein" : "Nouveau plein", headerShown: true }} />
+      <Stack.Screen options={{ title: isEdit ? t("editFuel") : t("newFuel"), headerShown: true }} />
       <ScrollView className="flex-1 bg-slate-50 dark:bg-slate-900">
         <View className="p-4 gap-4">
           <Card>
@@ -76,12 +78,12 @@ export default function FuelFormScreen() {
             </Text>
 
             <View className="gap-3">
-              <Input label="Date" value={date} onChangeText={setDate} placeholder="AAAA-MM-JJ" />
+              <Input label={t("date")} value={date} onChangeText={setDate} placeholder="AAAA-MM-JJ" />
 
               <View className="flex-row gap-3">
                 <View className="flex-1">
                   <Input
-                    label="Litres *"
+                    label={`${t("liters")} *`}
                     value={liters}
                     onChangeText={setLiters}
                     keyboardType="decimal-pad"
@@ -90,7 +92,7 @@ export default function FuelFormScreen() {
                 </View>
                 <View className="flex-1">
                   <Input
-                    label="Prix/L *"
+                    label={`${t("pricePerLiter")} *`}
                     value={pricePerLiter}
                     onChangeText={setPricePerLiter}
                     keyboardType="decimal-pad"
@@ -100,14 +102,14 @@ export default function FuelFormScreen() {
               </View>
 
               <View style={{ backgroundColor: "#dbeafe" }} className="rounded-xl p-3">
-                <Text className="text-blue-800 text-xs uppercase font-semibold">Total</Text>
+                <Text className="text-blue-800 text-xs uppercase font-semibold">{t("total")}</Text>
                 <Text className="text-blue-900 text-2xl font-bold mt-1">
                   {totalCost.toFixed(2)}
                 </Text>
               </View>
 
               <Input
-                label="Kilométrage *"
+                label={`${t("mileage")} *`}
                 value={mileage}
                 onChangeText={setMileage}
                 keyboardType="number-pad"
@@ -115,7 +117,7 @@ export default function FuelFormScreen() {
               />
 
               <Input
-                label="Station (optionnel)"
+                label={`${t("station")} (${t("optional")})`}
                 value={station}
                 onChangeText={setStation}
                 placeholder="Total, Shell, Agil..."
@@ -130,11 +132,11 @@ export default function FuelFormScreen() {
                 }`}>
                   {fullTank && <Text className="text-white text-xs font-bold">✓</Text>}
                 </View>
-                <Text className="text-slate-700 dark:text-slate-300">Plein complet</Text>
+                <Text className="text-slate-700 dark:text-slate-300">{t("fullTank")}</Text>
               </Pressable>
 
               <Input
-                label="Notes (optionnel)"
+                label={`${t("notes")} (${t("optional")})`}
                 value={notes}
                 onChangeText={setNotes}
                 multiline
@@ -145,7 +147,7 @@ export default function FuelFormScreen() {
           </Card>
 
           <Button
-            title={uploading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Enregistrer"}
+            title={uploading ? "Enregistrement..." : isEdit ? t("update") : t("save")}
             onPress={handleSave}
             loading={uploading}
             size="lg"

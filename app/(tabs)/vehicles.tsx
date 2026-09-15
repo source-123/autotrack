@@ -6,15 +6,17 @@ import { useStore } from "../../lib/store";
 import { formatMileage } from "../../lib/utils";
 import { Vehicle } from "../../types";
 import { Button } from "../../components/ui/Button";
+import { useTranslation } from "../../lib/useTranslation";
 
 export default function VehiclesScreen() {
+  const { t } = useTranslation();
   const vehicles = useStore((s) => s.vehicles);
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: "Véhicules",
+          title: t("tabVehicles"),
           headerRight: () => (
             <Pressable onPress={() => router.push("/vehicle/new")} className="mr-4">
               <Plus color="#2563eb" size={24} />
@@ -24,15 +26,15 @@ export default function VehiclesScreen() {
       />
       {vehicles.length === 0 ? (
         <View className="flex-1 bg-slate-50 dark:bg-slate-900 items-center justify-center p-6">
-          <View className="bg-blue-100 rounded-full p-8 mb-5">
+          <View className="bg-blue-100 dark:bg-blue-950 rounded-full p-8 mb-5">
             <Car color="#2563eb" size={56} />
           </View>
-          <Text className="text-2xl font-bold text-slate-900 dark:text-white">Aucun véhicule</Text>
+          <Text className="text-2xl font-bold text-slate-900 dark:text-white">{t("noVehicle")}</Text>
           <Text className="text-slate-500 dark:text-slate-400 text-center mt-2 mb-6 max-w-xs">
-            Ajoutez votre premier véhicule pour commencer à suivre son entretien.
+            {t("noVehicleDesc")}
           </Text>
           <Button
-            title="Ajouter un véhicule"
+            title={t("addVehicle")}
             onPress={() => router.push("/vehicle/new")}
             icon={<Plus color="#fff" size={20} />}
           />
@@ -51,6 +53,7 @@ export default function VehiclesScreen() {
 }
 
 function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
+  const { t } = useTranslation();
   const hasPhoto = !!vehicle.photoUri && vehicle.photoUri.length > 0;
 
   return (
@@ -66,15 +69,7 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           transition={300}
         />
       ) : (
-        <View
-          style={{
-            width: "100%",
-            height: 140,
-            backgroundColor: "#2563eb",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <View style={{ width: "100%", height: 140, backgroundColor: "#2563eb", alignItems: "center", justifyContent: "center" }}>
           <Car color="#fff" size={48} />
         </View>
       )}
@@ -85,19 +80,18 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             <Text className="text-lg font-bold text-slate-900 dark:text-white">
               {vehicle.brand} {vehicle.model}
             </Text>
-            <Text
-              className="text-sm text-slate-500 dark:text-slate-400 mt-0.5"
-              style={{ writingDirection: "ltr" }}
-            >
+            <Text className="text-sm text-slate-500 dark:text-slate-400 mt-0.5" style={{ writingDirection: "ltr" }}>
               {vehicle.plate} • {vehicle.year}
             </Text>
           </View>
-          <View className="bg-blue-100 rounded-full px-3 py-1">
-            <Text className="text-xs font-bold text-blue-700 uppercase">{vehicle.fuel}</Text>
+          <View className="bg-blue-100 dark:bg-blue-950 rounded-full px-3 py-1">
+            <Text className="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase">
+              {t(vehicle.fuel === "essence" ? "gasoline" : vehicle.fuel === "diesel" ? "diesel" : vehicle.fuel === "electrique" ? "electric" : vehicle.fuel === "hybride" ? "hybrid" : "gpl")}
+            </Text>
           </View>
         </View>
         <View className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-row justify-between">
-          <Text className="text-slate-500 dark:text-slate-400 text-xs">Kilométrage</Text>
+          <Text className="text-slate-500 dark:text-slate-400 text-xs">{t("mileage")}</Text>
           <Text className="text-slate-900 dark:text-white font-semibold text-sm">
             {formatMileage(vehicle.mileage)}
           </Text>

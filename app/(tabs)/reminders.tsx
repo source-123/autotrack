@@ -6,6 +6,7 @@ import {
 } from "lucide-react-native";
 import { useStore } from "../../lib/store";
 import { computeAlerts, Alert } from "../../lib/alerts";
+import { useTranslation } from "../../lib/useTranslation";
 import { formatDate, formatMileage } from "../../lib/utils";
 
 type Filter = "all" | "urgent" | "soon";
@@ -18,6 +19,7 @@ export default function RemindersScreen() {
   const reminders = useStore((s) => s.reminders);
 
   const [filter, setFilter] = useState<Filter>("all");
+  const { t } = useTranslation();
 
   const alerts = useMemo(
     () => computeAlerts(vehicles, maintenances, insurances, inspections, reminders),
@@ -39,18 +41,18 @@ export default function RemindersScreen() {
           <FilterChip
             active={filter === "all"}
             onPress={() => setFilter("all")}
-            label={`Tous (${alerts.length})`}
+            label={`${t("filterAll")} (${alerts.length})`}
           />
           <FilterChip
             active={filter === "urgent"}
             onPress={() => setFilter("urgent")}
-            label={`Urgents (${urgentCount})`}
+            label={`${t("filterUrgent")} (${urgentCount})`}
             color="red"
           />
           <FilterChip
             active={filter === "soon"}
             onPress={() => setFilter("soon")}
-            label={`Bientôt (${soonCount})`}
+            label={`${t("filterSoon")} (${soonCount})`}
             color="amber"
           />
         </View>
@@ -59,10 +61,10 @@ export default function RemindersScreen() {
           <View className="bg-white rounded-2xl p-8 border border-zinc-200 items-center mt-4">
             <CheckCircle2 color="#10b981" size={48} />
             <Text className="text-zinc-900 font-bold mt-3 text-lg">
-              {filter === "all" ? "Aucun rappel" : "Aucun rappel dans cette catégorie"}
+              {filter === "all" ? t("noReminders") : t("noReminders")}
             </Text>
             <Text className="text-zinc-500 text-sm text-center mt-1">
-              Ajoutez des entretiens, assurances ou visites pour voir apparaître les échéances
+              {t("noRemindersDesc")}
             </Text>
           </View>
         ) : (

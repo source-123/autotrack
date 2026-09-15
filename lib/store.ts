@@ -18,6 +18,7 @@ function withUserId<T extends object>(obj: T): T & { userId?: string } {
 
 type State = {
   currency: Currency;
+  language: "fr" | "ar";
   vehicles: Vehicle[];
   maintenances: Maintenance[];
   insurances: Insurance[];
@@ -33,6 +34,7 @@ type State = {
   _setFuels: (f: Fuel[]) => void;
 
   setCurrency: (c: Currency) => void;
+  setLanguage: (l: "fr" | "ar") => void;
 
   addVehicle: (v: Omit<Vehicle, "id" | "createdAt">) => void;
   updateVehicle: (id: string, v: Partial<Vehicle>) => void;
@@ -67,7 +69,8 @@ const genId = () =>
 export const useStore = create<State>()(
   persist(
     (set, get) => ({
-      currency: "EUR",
+      currency: "TND",
+      language: "fr",
       vehicles: [],
       maintenances: [],
       insurances: [],
@@ -83,6 +86,7 @@ export const useStore = create<State>()(
       _setFuels: (fuels) => set({ fuels }),
 
       setCurrency: (currency) => set({ currency }),
+      setLanguage: (language) => set({ language }),
 
       clearAll: () =>
         set({
@@ -235,7 +239,7 @@ export const useStore = create<State>()(
     {
       name: "autotrack-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ currency: state.currency }) as any,
+      partialize: (state) => ({ currency: state.currency, language: state.language }) as any,
     }
   )
 );

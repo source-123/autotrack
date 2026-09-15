@@ -2,8 +2,8 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import dayjs from "dayjs";
 import { Vehicle, Maintenance, Insurance, Inspection } from "../types";
+import { NotificationPrefs } from "./notificationPrefs";
 
-// Config globale : comment afficher les notifs quand l'app est ouverte
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -14,10 +14,8 @@ Notifications.setNotificationHandler({
   }),
 });
 
-/** Demander la permission (à appeler au premier lancement) */
 export async function requestPermission(): Promise<boolean> {
   if (Platform.OS === "web") {
-    // Web : utilise l'API Notification
     if (typeof window === "undefined") return false;
     if (!("Notification" in window)) return false;
     const perm = await (window as any).Notification.requestPermission();
@@ -29,17 +27,14 @@ export async function requestPermission(): Promise<boolean> {
   return status === "granted";
 }
 
-/** Annuler toutes les notifications programmées */
 export async function cancelAll() {
   if (Platform.OS === "web") return;
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
-/** Programme une notification à une date donnée */
 async function scheduleAt(date: Date, title: string, body: string, id: string) {
-  if (date.getTime() <= Date.now()) return; // pas dans le futur
+  if (date.getTime() <= Date.now()) return;
   if (Platform.OS === "web") {
-    // Sur web, on utilise setTimeout (limité mais fonctionne app ouverte)
     const ms = date.getTime() - Date.now();
     if (ms < 2147483647) {
       setTimeout(() => {
@@ -51,73 +46,108 @@ async function scheduleAt(date: Date, title: string, body: string, id: string) {
   await Notifications.scheduleNotificationAsync({
     identifier: id,
     content: { title, body, sound: true },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date,
+    },
   });
 }
 
-/**
- * Recalcule et reprogramme toutes les notifications.
- * À appeler au démarrage et après chaque modification.
- */
+type Lang = "fr" | "ar";
+
+const STRINGS: Record<Lang, Record<string, string>> = {
+  fr: {
+    inspectionTitle: "🔴 Visite technique",
+    inspectionBody: "{label} — expire dans {d} jour(s)",
+    insuranceTitle: "🛡️ Assurance",
+    insuranceBody: "{label} — {company} expire dans {d} jour(s)",
+    maintenanceTitle: "🔧 Entretien à prévoir",
+    maintenanceBody: "{label} — {type} dans {d} jour(s)",
+  },
+  ar: {
+    inspectionTitle: "🔴 الفحص الفني",
+    inspectionBody: "{label} — ينتهي في {d} يوم",
+    insuranceTitle: "🛡️ التأمين",
+    insuranceBody: "{label} — {company} ينتهي في {d} يوم",
+    maintenanceTitle: "🔧 صيانة قادمة",
+    maintenanceBody: "{label} — {type} بعد {d} يوم",
+  },
+};
+
+function t(lang: Lang, key: string, vars: Record<string, any> = {}): string {
+  let s = STRINGS[lang][key] || key;
+  for (const [k, v] of Object.entries(vars)) {
+    s = s.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+  }
+  return s;
+}
+
 export async function rescheduleAll(
   vehicles: Vehicle[],
   maintenances: Maintenance[],
   insurances: Insurance[],
-  inspections: Inspection[]
+  inspections: Inspection[],
+  prefs: NotificationPrefs,
+  language: Lang = "fr"
 ) {
   await cancelAll();
+  if (!prefs.enabled) return;
 
   const now = Date.now();
+  const daysToSchedule: number[] = [];
+  if (prefs.daysBefore.d30) daysToSchedule.push(30);
+  if (prefs.daysBefore.d7) daysToSchedule.push(7);
+  if (prefs.daysBefore.d1) daysToSchedule.push(1);
 
   for (const v of vehicles) {
     const label = `${v.brand} ${v.model} (${v.plate})`;
 
-    // --- Visite technique : notif 30j et 7j avant expiration ---
+    // Visite technique
     const latestVT = inspections
       .filter((i) => i.vehicleId === v.id)
       .sort((a, b) => b.expiryDate.localeCompare(a.expiryDate))[0];
     if (latestVT) {
-      for (const days of [30, 7, 1]) {
+      for (const days of daysToSchedule) {
         const d = dayjs(latestVT.expiryDate).subtract(days, "day").toDate();
         if (d.getTime() > now) {
           await scheduleAt(
             d,
-            "🔴 Visite technique",
-            `${label} — expire dans ${days} jour${days > 1 ? "s" : ""}`,
+            t(language, "inspectionTitle"),
+            t(language, "inspectionBody", { label, d: days }),
             `vt-${v.id}-${days}`
           );
         }
       }
     }
 
-    // --- Assurance ---
+    // Assurance
     const latestIns = insurances
       .filter((i) => i.vehicleId === v.id)
       .sort((a, b) => b.endDate.localeCompare(a.endDate))[0];
     if (latestIns) {
-      for (const days of [30, 7, 1]) {
+      for (const days of daysToSchedule) {
         const d = dayjs(latestIns.endDate).subtract(days, "day").toDate();
         if (d.getTime() > now) {
           await scheduleAt(
             d,
-            "🛡️ Assurance",
-            `${label} — ${latestIns.company} expire dans ${days} jour${days > 1 ? "s" : ""}`,
+            t(language, "insuranceTitle"),
+            t(language, "insuranceBody", { label, company: latestIns.company, d: days }),
             `ins-${v.id}-${days}`
           );
         }
       }
     }
 
-    // --- Entretiens par date ---
+    // Entretiens par date
     for (const m of maintenances.filter((x) => x.vehicleId === v.id)) {
       if (!m.nextDueDate) continue;
-      for (const days of [14, 3]) {
+      for (const days of daysToSchedule) {
         const d = dayjs(m.nextDueDate).subtract(days, "day").toDate();
         if (d.getTime() > now) {
           await scheduleAt(
             d,
-            "🔧 Entretien à prévoir",
-            `${label} — ${m.type.replace("_", " ")} dans ${days} jour${days > 1 ? "s" : ""}`,
+            t(language, "maintenanceTitle"),
+            t(language, "maintenanceBody", { label, type: m.type.replace("_", " "), d: days }),
             `maint-${m.id}-${days}`
           );
         }

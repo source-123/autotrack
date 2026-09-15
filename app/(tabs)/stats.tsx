@@ -7,6 +7,7 @@ import { formatMoney } from "../../lib/utils";
 import { Card } from "../../components/ui/Card";
 import { BarChart } from "../../components/charts/BarChart";
 import { maintenanceColors } from "../../lib/theme";
+import { useTranslation } from "../../lib/useTranslation";
 
 export default function StatsScreen() {
   const vehicles = useStore((s) => s.vehicles);
@@ -15,6 +16,7 @@ export default function StatsScreen() {
   const inspections = useStore((s) => s.inspections);
   const fuels = useStore((s) => s.fuels);
   const currency = useStore((s) => s.currency);
+  const { t } = useTranslation();
 
   // ===== Coût total par mois sur 12 derniers mois =====
   const monthlyData = useMemo(() => {
@@ -69,7 +71,7 @@ export default function StatsScreen() {
     };
   }, [maintenances, insurances, inspections]);
 
-  // ===== Top entretiens par coût =====
+  // ===== {t("topMaintenance")} par coût =====
   const topMaintenances = useMemo(() => {
     const map = new Map<string, number>();
     for (const m of maintenances) {
@@ -91,21 +93,21 @@ export default function StatsScreen() {
           <View className="flex-row items-center gap-2 mb-2">
             <TrendingUp color="#bfdbfe" size={18} />
             <Text className="text-blue-100 text-xs font-semibold uppercase">
-              Dépenses {new Date().getFullYear()}
+              {t("expenses")} {new Date().getFullYear()}
             </Text>
           </View>
           <Text className="text-white text-3xl font-bold">
             {formatMoney(totalThisYear, currency)}
           </Text>
           <Text className="text-blue-100 text-xs mt-1">
-            {vehicles.length} véhicule{vehicles.length > 1 ? "s" : ""} • {maintenances.length + insurances.length + inspections.length} entrées
+            {vehicles.length} {t("vehicles")} • {maintenances.length + insurances.length + inspections.length} entrées
           </Text>
         </Card>
 
         {/* Graphique mensuel */}
         <Card>
           <Text className="text-base font-bold text-slate-900 dark:text-white mb-3">
-            Dépenses sur 12 mois
+            {t("last12Months")}
           </Text>
           <BarChart data={monthlyData} height={200} formatValue={(v) => formatMoney(v, currency)} />
         </Card>
@@ -113,12 +115,12 @@ export default function StatsScreen() {
         {/* Répartition par catégorie */}
         <Card>
           <Text className="text-base font-bold text-slate-900 dark:text-white mb-4">
-            Répartition {new Date().getFullYear()}
+            {t("breakdown")} {new Date().getFullYear()}
           </Text>
 
           <CategoryRow
             icon={<Wrench color="#f59e0b" size={18} />}
-            label="Entretiens"
+            label={t("maintenanceLabel")}
             value={categoryData.maintenance}
             total={totalCategory}
             currency={currency}
@@ -126,7 +128,7 @@ export default function StatsScreen() {
           />
           <CategoryRow
             icon={<Shield color="#3b82f6" size={18} />}
-            label="Assurances"
+            label={t("insurancesLabel")}
             value={categoryData.insurance}
             total={totalCategory}
             currency={currency}
@@ -134,7 +136,7 @@ export default function StatsScreen() {
           />
           <CategoryRow
             icon={<ClipboardCheck color="#10b981" size={18} />}
-            label="Visites techniques"
+            label={t("inspectionsLabel")}
             value={categoryData.inspection}
             total={totalCategory}
             currency={currency}
@@ -142,11 +144,11 @@ export default function StatsScreen() {
           />
         </Card>
 
-        {/* Top entretiens */}
+        {/* {t("topMaintenance")} */}
         {topMaintenances.length > 0 && (
           <Card>
             <Text className="text-base font-bold text-slate-900 dark:text-white mb-3">
-              Top entretiens
+              {t("topMaintenance")}
             </Text>
             {topMaintenances.map((item) => {
               const colorInfo = maintenanceColors[item.type] || maintenanceColors.autre;
@@ -173,10 +175,10 @@ export default function StatsScreen() {
         <Card>
           <View className="flex-row items-center gap-2 mb-3">
             <Car color="#2563eb" size={18} />
-            <Text className="text-base font-bold text-slate-900">Par véhicule</Text>
+            <Text className="text-base font-bold text-slate-900">{t("byVehicle")}</Text>
           </View>
           {vehicles.length === 0 ? (
-            <Text className="text-slate-400 text-center py-4 text-sm">Aucun véhicule</Text>
+            <Text className="text-slate-400 text-center py-4 text-sm">{t("noVehiclesStats")}</Text>
           ) : (
             vehicles.map((v) => {
               const cost =

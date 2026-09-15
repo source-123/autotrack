@@ -1,24 +1,27 @@
-import { View, Text, TextInput, ScrollView, Pressable, Alert } from "react-native";
+import { View, Text, ScrollView, TextInput, Pressable, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { goBackSafely } from "../../lib/navigation";
 import { useStore } from "../../lib/store";
+import { goBackSafely } from "../../lib/navigation";
+import { useTranslation } from "../../lib/useTranslation";
+import { TranslationKey } from "../../lib/i18n";
 import { MaintenanceType } from "../../types";
 
-const TYPES: { key: MaintenanceType; label: string }[] = [
-  { key: "vidange", label: "Vidange" },
-  { key: "filtre_air", label: "Filtre à air" },
-  { key: "filtre_huile", label: "Filtre à huile" },
-  { key: "bougies", label: "Bougies" },
-  { key: "plaquettes", label: "Plaquettes" },
-  { key: "pneus", label: "Pneus" },
-  { key: "batterie", label: "Batterie" },
-  { key: "courroie", label: "Courroie" },
-  { key: "chaine", label: "Chaîne" },
-  { key: "autre", label: "Autre" },
+const TYPES: { key: MaintenanceType; labelKey: TranslationKey }[] = [
+  { key: "vidange", labelKey: "typeOilChange" },
+  { key: "filtre_air", labelKey: "typeAirFilter" },
+  { key: "filtre_huile", labelKey: "typeOilFilter" },
+  { key: "bougies", labelKey: "typeSparkPlugs" },
+  { key: "plaquettes", labelKey: "typeBrakePads" },
+  { key: "pneus", labelKey: "typeTires" },
+  { key: "batterie", labelKey: "typeBattery" },
+  { key: "courroie", labelKey: "typeBelt" },
+  { key: "chaine", labelKey: "typeChain" },
+  { key: "autre", labelKey: "typeOther" },
 ];
 
 export default function MaintenanceFormScreen() {
+  const { t } = useTranslation();
   const { vehicleId, id } = useLocalSearchParams<{ vehicleId: string; id?: string }>();
   const isEdit = !!id;
 
@@ -50,7 +53,7 @@ export default function MaintenanceFormScreen() {
 
   const handleSave = () => {
     if (!mileage.trim()) {
-      Alert.alert("Champ manquant", "Le kilométrage est obligatoire.");
+      Alert.alert(t("missingFields"), t("mileage"));
       return;
     }
     const data = {
@@ -71,61 +74,66 @@ export default function MaintenanceFormScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: isEdit ? "Modifier l'entretien" : "Nouvel entretien", headerShown: true }} />
-      <ScrollView className="flex-1 bg-zinc-50">
+      <Stack.Screen options={{ title: isEdit ? t("editMaintenance") : t("newMaintenance"), headerShown: true }} />
+      <ScrollView className="flex-1 bg-slate-50 dark:bg-slate-900">
         <View className="p-4 gap-4">
-          <Field label="Type d'intervention">
+          <Field label={t("maintenanceType")}>
             <View className="flex-row flex-wrap gap-2">
-              {TYPES.map((t) => (
-                <Pressable key={t.key} onPress={() => setType(t.key)}
-                  className={`px-3 py-2 rounded-full border ${type === t.key ? "bg-blue-500 border-blue-500" : "bg-white border-zinc-200"}`}>
-                  <Text className={type === t.key ? "text-white font-semibold text-xs" : "text-zinc-700 text-xs"}>{t.label}</Text>
+              {TYPES.map((tt) => (
+                <Pressable
+                  key={tt.key}
+                  onPress={() => setType(tt.key)}
+                  className={`px-3 py-2 rounded-full border ${type === tt.key ? "bg-blue-600 border-blue-600" : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600"}`}
+                >
+                  <Text className={type === tt.key ? "text-white font-semibold text-xs" : "text-slate-700 dark:text-slate-200 text-xs"}>
+                    {t(tt.labelKey)}
+                  </Text>
                 </Pressable>
               ))}
             </View>
           </Field>
 
-          <Field label="Date de l'intervention">
+          <Field label={t("interventionDate")}>
             <TextInput value={date} onChangeText={setDate} placeholder="AAAA-MM-JJ"
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Kilométrage *">
+          <Field label={`${t("mileage")} *`}>
             <TextInput value={mileage} onChangeText={setMileage} keyboardType="number-pad" placeholder="45000"
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Coût">
+          <Field label={t("cost")}>
             <TextInput value={cost} onChangeText={setCost} keyboardType="decimal-pad" placeholder="120"
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Garage (optionnel)">
+          <Field label={`${t("garage")} (${t("optional")})`}>
             <TextInput value={garage} onChangeText={setGarage} placeholder="Speedy, Norauto..."
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Notes (optionnel)">
-            <TextInput value={notes} onChangeText={setNotes} multiline numberOfLines={3} placeholder="Détails..."
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+          <Field label={`${t("notes")} (${t("optional")})`}>
+            <TextInput value={notes} onChangeText={setNotes} multiline numberOfLines={3}
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <View className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-            <Text className="text-amber-800 font-semibold text-sm mb-3">🔔 Prochain rappel (optionnel)</Text>
-            <Field label="Date">
+          <View className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
+            <Text className="text-amber-800 dark:text-amber-200 font-semibold text-sm mb-3">{t("nextReminder")}</Text>
+            <Field label={t("date")}>
               <TextInput value={nextDueDate} onChangeText={setNextDueDate} placeholder="AAAA-MM-JJ"
-                className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+                className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
             </Field>
             <View className="h-3" />
-            <Field label="Ou kilométrage">
+            <Field label={t("orMileage")}>
               <TextInput value={nextDueMileage} onChangeText={setNextDueMileage} keyboardType="number-pad" placeholder="60000"
-                className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+                className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
             </Field>
           </View>
 
-          <Pressable onPress={handleSave} className="bg-blue-500 rounded-xl py-4 mt-4 active:bg-blue-600">
+          <Pressable onPress={handleSave} className="bg-blue-600 rounded-xl py-4 mt-4 active:bg-blue-700">
             <Text className="text-white text-center font-bold text-base">
-              {isEdit ? "Mettre à jour" : "Enregistrer"}
+              {isEdit ? t("update") : t("save")}
             </Text>
           </Pressable>
         </View>
@@ -137,7 +145,7 @@ export default function MaintenanceFormScreen() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View className="gap-2">
-      <Text className="text-sm font-semibold text-zinc-700">{label}</Text>
+      <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</Text>
       {children}
     </View>
   );

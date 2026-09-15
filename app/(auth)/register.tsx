@@ -1,11 +1,14 @@
-import { View, Text, TextInput, Pressable, Alert, ScrollView } from "react-native";
+import { View, Text, TextInput, Alert, ScrollView } from "react-native";
 import { useState } from "react";
 import { Link, router } from "expo-router";
 import { Image } from "expo-image";
 import { Mail, Lock, User } from "lucide-react-native";
 import { registerUser, translateAuthError } from "../../lib/auth";
+import { useTranslation } from "../../lib/useTranslation";
+import { Button } from "../../components/ui/Button";
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,15 +17,15 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password) {
-      Alert.alert("Champs manquants", "Tous les champs sont obligatoires.");
+      Alert.alert(t("missingFields"), "");
       return;
     }
     if (password.length < 6) {
-      Alert.alert("Mot de passe faible", "Minimum 6 caractères.");
+      Alert.alert(t("weakPassword"));
       return;
     }
     if (password !== confirm) {
-      Alert.alert("Mots de passe différents", "Les deux mots de passe doivent être identiques.");
+      Alert.alert(t("passwordsDontMatch"));
       return;
     }
     setLoading(true);
@@ -30,14 +33,14 @@ export default function RegisterScreen() {
       await registerUser(email.trim(), password, name.trim());
       router.replace("/(tabs)");
     } catch (e: any) {
-      Alert.alert("Inscription échouée", translateAuthError(e?.code || ""));
+      Alert.alert(t("registerFailed"), translateAuthError(e?.code || ""));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-50" contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView className="flex-1 bg-slate-50 dark:bg-slate-900" contentContainerStyle={{ flexGrow: 1 }}>
       <View className="flex-1 justify-center p-6">
         <View className="items-center mb-4">
           <Image
@@ -47,80 +50,77 @@ export default function RegisterScreen() {
           />
         </View>
 
-        <View className="bg-white rounded-2xl p-5 border border-slate-200 gap-4">
-          <Text className="text-xl font-bold text-slate-900">Inscription</Text>
+        <View className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 gap-4">
+          <Text className="text-xl font-bold text-slate-900 dark:text-white">{t("register")}</Text>
 
           <View className="gap-2">
-            <Text className="text-sm font-semibold text-slate-700">Nom complet</Text>
-            <View className="flex-row items-center bg-slate-50 border border-slate-200 rounded-xl px-3">
+            <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t("fullName")}</Text>
+            <View className="flex-row items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3">
               <User color="#94a3b8" size={18} />
               <TextInput
                 value={name}
                 onChangeText={setName}
-                placeholder="Jean Dupont"
-                className="flex-1 py-3 px-2 text-slate-900"
+                className="flex-1 py-3 px-2 text-slate-900 dark:text-white"
+                placeholderTextColor="#94a3b8"
               />
             </View>
           </View>
 
           <View className="gap-2">
-            <Text className="text-sm font-semibold text-slate-700">Email</Text>
-            <View className="flex-row items-center bg-slate-50 border border-slate-200 rounded-xl px-3">
+            <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t("email")}</Text>
+            <View className="flex-row items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3">
               <Mail color="#94a3b8" size={18} />
               <TextInput
                 value={email}
                 onChangeText={setEmail}
-                placeholder="ton@email.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
-                className="flex-1 py-3 px-2 text-slate-900"
+                className="flex-1 py-3 px-2 text-slate-900 dark:text-white"
+                placeholderTextColor="#94a3b8"
               />
             </View>
           </View>
 
           <View className="gap-2">
-            <Text className="text-sm font-semibold text-slate-700">Mot de passe</Text>
-            <View className="flex-row items-center bg-slate-50 border border-slate-200 rounded-xl px-3">
+            <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t("password")}</Text>
+            <View className="flex-row items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3">
               <Lock color="#94a3b8" size={18} />
               <TextInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="•••••••• (min 6)"
                 secureTextEntry
-                className="flex-1 py-3 px-2 text-slate-900"
+                className="flex-1 py-3 px-2 text-slate-900 dark:text-white"
+                placeholderTextColor="#94a3b8"
               />
             </View>
           </View>
 
           <View className="gap-2">
-            <Text className="text-sm font-semibold text-slate-700">Confirmer</Text>
-            <View className="flex-row items-center bg-slate-50 border border-slate-200 rounded-xl px-3">
+            <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t("confirmPassword")}</Text>
+            <View className="flex-row items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3">
               <Lock color="#94a3b8" size={18} />
               <TextInput
                 value={confirm}
                 onChangeText={setConfirm}
-                placeholder="••••••••"
                 secureTextEntry
-                className="flex-1 py-3 px-2 text-slate-900"
+                className="flex-1 py-3 px-2 text-slate-900 dark:text-white"
+                placeholderTextColor="#94a3b8"
               />
             </View>
           </View>
 
-          <Pressable
+          <Button
+            title={loading ? t("saving") : t("registerButton")}
             onPress={handleRegister}
-            disabled={loading}
-            className={`rounded-xl py-4 mt-2 ${loading ? "bg-blue-300" : "bg-blue-600 active:bg-blue-700"}`}
-          >
-            <Text className="text-white text-center font-bold text-base">
-              {loading ? "Création..." : "Créer mon compte"}
-            </Text>
-          </Pressable>
+            loading={loading}
+            size="lg"
+          />
 
           <View className="flex-row justify-center mt-2">
-            <Text className="text-slate-500 text-sm">Déjà un compte ? </Text>
-            <Link href="/(auth)/login" className="text-blue-600 text-sm font-semibold">
-              Se connecter
+            <Text className="text-slate-500 dark:text-slate-400 text-sm">{t("haveAccount")} </Text>
+            <Link href="/(auth)/login" className="text-blue-600 dark:text-blue-400 text-sm font-semibold">
+              {t("loginButton")}
             </Link>
           </View>
         </View>

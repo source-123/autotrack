@@ -1,17 +1,20 @@
-import { View, Text, TextInput, ScrollView, Pressable, Alert } from "react-native";
+import { View, Text, ScrollView, TextInput, Pressable, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { goBackSafely } from "../../lib/navigation";
 import { useStore } from "../../lib/store";
+import { goBackSafely } from "../../lib/navigation";
+import { useTranslation } from "../../lib/useTranslation";
+import { TranslationKey } from "../../lib/i18n";
 import { Insurance } from "../../types";
 
-const TYPES: { key: Insurance["type"]; label: string }[] = [
-  { key: "tous_risques", label: "Tous risques" },
-  { key: "intermediaire", label: "Intermédiaire" },
-  { key: "tiers", label: "Au tiers" },
+const TYPES: { key: Insurance["type"]; labelKey: TranslationKey }[] = [
+  { key: "tous_risques", labelKey: "typeAllRisk" },
+  { key: "intermediaire", labelKey: "typeIntermediate" },
+  { key: "tiers", labelKey: "typeThirdParty" },
 ];
 
 export default function InsuranceFormScreen() {
+  const { t } = useTranslation();
   const { vehicleId, id } = useLocalSearchParams<{ vehicleId: string; id?: string }>();
   const isEdit = !!id;
 
@@ -41,7 +44,7 @@ export default function InsuranceFormScreen() {
 
   const handleSave = () => {
     if (!company.trim() || !endDate) {
-      Alert.alert("Champs manquants", "Compagnie et date de fin obligatoires.");
+      Alert.alert(t("missingFields"), `${t("company")}, ${t("endDate")}`);
       return;
     }
     const data = {
@@ -61,53 +64,53 @@ export default function InsuranceFormScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: isEdit ? "Modifier l'assurance" : "Nouvelle assurance", headerShown: true }} />
-      <ScrollView className="flex-1 bg-zinc-50">
+      <Stack.Screen options={{ title: isEdit ? t("editInsurance") : t("newInsurance"), headerShown: true }} />
+      <ScrollView className="flex-1 bg-slate-50 dark:bg-slate-900">
         <View className="p-4 gap-4">
-          <Field label="Compagnie *">
+          <Field label={`${t("company")} *`}>
             <TextInput value={company} onChangeText={setCompany} placeholder="MAIF, AXA..."
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="N° de police">
+          <Field label={t("policyNumber")}>
             <TextInput value={policyNumber} onChangeText={setPolicyNumber} placeholder="ABC123..."
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Type de contrat">
+          <Field label={t("contractType")}>
             <View className="flex-row flex-wrap gap-2">
-              {TYPES.map((t) => (
-                <Pressable key={t.key} onPress={() => setType(t.key)}
-                  className={`px-4 py-2 rounded-full border ${type === t.key ? "bg-blue-500 border-blue-500" : "bg-white border-zinc-200"}`}>
-                  <Text className={type === t.key ? "text-white font-semibold" : "text-zinc-700"}>{t.label}</Text>
+              {TYPES.map((tt) => (
+                <Pressable key={tt.key} onPress={() => setType(tt.key)}
+                  className={`px-4 py-2 rounded-full border ${type === tt.key ? "bg-blue-600 border-blue-600" : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600"}`}>
+                  <Text className={type === tt.key ? "text-white font-semibold" : "text-slate-700 dark:text-slate-200"}>{t(tt.labelKey)}</Text>
                 </Pressable>
               ))}
             </View>
           </Field>
 
-          <Field label="Date de début">
+          <Field label={t("startDate")}>
             <TextInput value={startDate} onChangeText={setStartDate} placeholder="AAAA-MM-JJ"
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Date de fin *">
+          <Field label={`${t("endDate")} *`}>
             <TextInput value={endDate} onChangeText={setEndDate} placeholder="AAAA-MM-JJ"
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Coût annuel">
+          <Field label={t("annualCost")}>
             <TextInput value={cost} onChangeText={setCost} keyboardType="decimal-pad" placeholder="650"
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Field label="Notes (optionnel)">
-            <TextInput value={notes} onChangeText={setNotes} multiline numberOfLines={3} placeholder="Détails..."
-              className="bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900" />
+          <Field label={`${t("notes")} (${t("optional")})`}>
+            <TextInput value={notes} onChangeText={setNotes} multiline numberOfLines={3}
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white" />
           </Field>
 
-          <Pressable onPress={handleSave} className="bg-blue-500 rounded-xl py-4 mt-4 active:bg-blue-600">
+          <Pressable onPress={handleSave} className="bg-blue-600 rounded-xl py-4 mt-4 active:bg-blue-700">
             <Text className="text-white text-center font-bold text-base">
-              {isEdit ? "Mettre à jour" : "Enregistrer"}
+              {isEdit ? t("update") : t("save")}
             </Text>
           </Pressable>
         </View>
@@ -119,7 +122,7 @@ export default function InsuranceFormScreen() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View className="gap-2">
-      <Text className="text-sm font-semibold text-zinc-700">{label}</Text>
+      <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</Text>
       {children}
     </View>
   );
