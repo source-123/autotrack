@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
   Trash2, Plus, Wrench, Shield, ClipboardCheck, Link2,
-  AlertCircle, Pencil, ArrowLeft, Fuel as FuelIcon, FileText, History, Download,
+  AlertCircle, Pencil, ArrowLeft, Fuel as FuelIcon, FileText, History, Download, Sparkles,
 } from "lucide-react-native";
 import { useStore } from "../../lib/store";
 import { confirmAction } from "../../lib/confirm";
@@ -154,6 +154,25 @@ export default function VehicleDetailScreen() {
           {formatMileage(vehicle.mileage)}
         </Text>
       </View>
+
+      {/* Bouton Analyse IA */}
+      <Pressable
+        onPress={() => router.push(`/vehicle/analysis?id=${vehicle.id}`)}
+        className="mx-4 mt-3 rounded-2xl p-4 active:opacity-90 flex-row items-center gap-3"
+        style={{ backgroundColor: "#2563eb" }}
+      >
+        <View className="bg-white/20 rounded-full p-2">
+          <Sparkles color="#fff" size={20} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-white font-bold text-base">
+            {t("aiAnalysis")}
+          </Text>
+          <Text className="text-blue-100 text-xs mt-0.5">
+            {t("aiAnalysisDesc")}
+          </Text>
+        </View>
+      </Pressable>
 
       <View className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex-row">
         {TABS.map((tb) => {

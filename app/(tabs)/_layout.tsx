@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Car, Bell, User, BarChart3 } from "lucide-react-native";
+import { Home, Car, Bell, User, BarChart3, Sparkles } from "lucide-react-native";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "react-native";

@@ -51,6 +51,9 @@ export const translations = {
     tabHome: "Accueil",
     tabVehicles: "Véhicules",
     tabStats: "Stats",
+    tabAssistant: "Assistant",
+    aiAnalysis: "Analyse IA",
+    aiAnalysisDesc: "Détecte les pannes probables et prévisions de coûts",
     tabReminders: "Rappels",
     tabProfile: "Profil",
 
@@ -338,6 +341,9 @@ export const translations = {
     tabHome: "الرئيسية",
     tabVehicles: "السيارات",
     tabStats: "إحصائيات",
+    tabAssistant: "المساعد",
+    aiAnalysis: "تحليل ذكي",
+    aiAnalysisDesc: "يكتشف الأعطال المحتملة وتوقعات التكاليف",
     tabReminders: "تنبيهات",
     tabProfile: "الملف",
 
