@@ -14,6 +14,28 @@ Notifications.setNotificationHandler({
   }),
 });
 
+/**
+ * Crée le canal de notification pour Android 8+.
+ * Sans ce canal, les notifications ne s'affichent PAS.
+ */
+async function ensureAndroidChannel() {
+  if (Platform.OS !== "android") return;
+  try {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "Rappels AutoTrack",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#2563eb",
+      sound: "default",
+      enableVibrate: true,
+      showBadge: true,
+    });
+    console.log("✅ Canal Android créé");
+  } catch (e) {
+    console.warn("❌ Erreur création canal:", e);
+  }
+}
+
 export async function requestPermission(): Promise<boolean> {
   if (Platform.OS === "web") {
     if (typeof window === "undefined") return false;
@@ -22,8 +44,14 @@ export async function requestPermission(): Promise<boolean> {
     return perm === "granted";
   }
   const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing === "granted") return true;
+  if (existing === "granted") {
+    await ensureAndroidChannel();
+    return true;
+  }
   const { status } = await Notifications.requestPermissionsAsync();
+  if (status === "granted") {
+    await ensureAndroidChannel();
+  }
   return status === "granted";
 }
 
@@ -43,12 +71,20 @@ async function scheduleAt(date: Date, title: string, body: string, id: string) {
     }
     return;
   }
+  await ensureAndroidChannel();
   await Notifications.scheduleNotificationAsync({
     identifier: id,
-    content: { title, body, sound: true },
+    content: {
+      title,
+      body,
+      sound: "default",
+      priority: Notifications.AndroidNotificationPriority.MAX,
+      ...(Platform.OS === "android" ? { channelId: "default" } : {}),
+    },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date,
+      ...(Platform.OS === "android" ? { channelId: "default" } : {}),
     },
   });
 }

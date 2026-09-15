@@ -27,7 +27,11 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "NOTIFICATIONS"
+        "NOTIFICATIONS",
+        "POST_NOTIFICATIONS",
+        "SCHEDULE_EXACT_ALARM",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
       ]
     },
     "web": {
