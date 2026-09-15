@@ -9,27 +9,23 @@ if (!API_KEY) {
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 /**
- * Liste de modèles par ordre de préférence.
- * Si l'un tombe (503 surcharge, 404 déprécié, etc.), on essaie le suivant.
+ * Modèles par ordre de préférence (testés et fonctionnels).
+ * Le 1er qui répond prend la main.
  */
 const MODELS = [
-  "gemini-3-flash-preview",        // ✅ Testé et fonctionne parfaitement
-  "gemini-3.1-flash-lite",         // Fallback v3.1 lite
-  "gemini-3.1-flash-lite-preview", // Fallback v3.1 lite preview
+  "gemini-3-flash-preview",        // ✅ Testé - fonctionne bien
+  "gemini-3.1-flash-lite",         // Fallback v3.1
   "gemini-flash-lite-latest",      // Alias lite
   "gemini-flash-latest",           // Alias général
   "gemini-3.1-pro-preview",        // Pro en dernier recours
 ];
 
-/**
- * Extrait le texte d'une réponse Gemini en gérant les réponses multi-parts.
- */
+/** Extrait le texte de la réponse Gemini (gère multi-parts) */
 function extractText(response: any): string {
   try {
     const candidates = response?.candidates || [];
     if (candidates.length === 0) return "";
     const parts = candidates[0]?.content?.parts || [];
-    // Récupérer tout le texte (parfois le modèle split en plusieurs parts)
     return parts
       .map((p: any) => p?.text || "")
       .join("")
@@ -39,9 +35,7 @@ function extractText(response: any): string {
   }
 }
 
-/**
- * Essaie un modèle avec retry automatique.
- */
+/** Essaie un seul modèle, une seule fois. */
 async function tryModel(
   modelName: string,
   systemPrompt: string,
@@ -73,39 +67,33 @@ async function tryModel(
   }
 }
 
-/**
- * Retry une fonction async avec backoff exponentiel.
- */
-async function retry<T>(
-  fn: () => Promise<T>,
-  attempts: number = 2,
-  delayMs: number = 1000
-): Promise<T> {
-  let lastError: any;
-  for (let i = 0; i < attempts; i++) {
-    try {
-      return await fn();
-    } catch (e: any) {
-      lastError = e;
-      const isRetryable =
-        e?.message?.includes("503") ||
-        e?.message?.includes("Service Unavailable") ||
-        e?.message?.includes("high demand") ||
-        e?.message?.includes("429") ||
-        e?.message?.includes("UNAVAILABLE");
+/** Vérifie si l'erreur indique un rate limit. */
+function isRateLimit(e: any): boolean {
+  const m = e?.message || "";
+  return (
+    m.includes("429") ||
+    m.includes("Too Many Requests") ||
+    m.includes("rate limit") ||
+    m.includes("quota")
+  );
+}
 
-      if (!isRetryable || i === attempts - 1) {
-        throw e;
-      }
-      // Attendre avant de réessayer
-      await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
-    }
-  }
-  throw lastError;
+/** Vérifie si l'erreur indique un modèle indisponible. */
+function isModelUnavailable(e: any): boolean {
+  const m = e?.message || "";
+  return (
+    m.includes("404") ||
+    m.includes("NOT_FOUND") ||
+    m.includes("no longer available") ||
+    m.includes("503") ||
+    m.includes("high demand") ||
+    m.includes("UNAVAILABLE")
+  );
 }
 
 /**
- * Envoie un message à Gemini avec fallback automatique sur plusieurs modèles.
+ * Envoie un message à Gemini avec fallback automatique.
+ * Un seul essai par modèle pour économiser le quota.
  */
 export async function askGemini(
   systemPrompt: string,
@@ -116,37 +104,35 @@ export async function askGemini(
 
   for (const modelName of MODELS) {
     try {
-      console.log(`🤖 Essai modèle: ${modelName}`);
-      const text = await retry(
-        () => tryModel(modelName, systemPrompt, userMessage, options),
-        2,
-        800
-      );
-
+      console.log(`🤖 Essai: ${modelName}`);
+      const text = await tryModel(modelName, systemPrompt, userMessage, options);
       if (text) {
-        console.log(`✅ Réponse via ${modelName}`);
+        console.log(`✅ Succès via ${modelName}`);
         return text;
       }
-      console.warn(`⚠️ Réponse vide de ${modelName}, essai suivant`);
     } catch (e: any) {
-      console.warn(`❌ Échec ${modelName}:`, e?.message);
+      console.warn(`❌ ${modelName}:`, (e?.message || "").slice(0, 100));
       lastError = e;
-      // Continue avec le modèle suivant
+
+      // Si c'est un rate limit, NE PAS essayer d'autres modèles (ça aggraverait)
+      if (isRateLimit(e)) {
+        throw new Error("Trop de requêtes. Attends 60 secondes puis réessaie.");
+      }
+      // Sinon on essaie le modèle suivant
     }
   }
 
   // Tous les modèles ont échoué
   const msg = lastError?.message || "Erreur inconnue";
-  if (msg.includes("503") || msg.includes("high demand")) {
-    throw new Error("Tous les serveurs IA sont surchargés. Réessaie dans 30 secondes.");
+  console.error("Tous les modèles ont échoué:", msg.slice(0, 200));
+
+  if (msg.includes("PERMISSION_DENIED") && msg.includes("has not been used")) {
+    throw new Error("L'API Gemini n'est pas activée sur le projet Google Cloud.");
   }
-  if (msg.includes("PERMISSION_DENIED") || msg.includes("403")) {
-    throw new Error("API non activée. Vérifie ton projet Google Cloud.");
+  if (msg.includes("API_KEY_INVALID") || msg.includes("API key not valid")) {
+    throw new Error("Clé API invalide. Vérifie ton fichier .env");
   }
-  if (msg.includes("429") || msg.includes("quota")) {
-    throw new Error("Quota dépassé. Réessaie dans une minute.");
-  }
-  throw new Error("L'IA est temporairement indisponible. Réessaie dans un instant.");
+  throw new Error("L'IA est temporairement indisponible. Réessaie dans 30 secondes.");
 }
 
 /**
@@ -161,32 +147,33 @@ export async function chatWithGemini(
 
   for (const modelName of MODELS) {
     try {
-      console.log(`🤖 Chat avec: ${modelName}`);
-      const text = await retry(
-        () => tryModel(modelName, systemPrompt, newMessage, { temperature: 0.8, maxTokens: 1024 }, history),
-        2,
-        800
+      console.log(`💬 Chat via: ${modelName}`);
+      const text = await tryModel(
+        modelName,
+        systemPrompt,
+        newMessage,
+        { temperature: 0.8, maxTokens: 1024 },
+        history
       );
-
       if (text) {
-        console.log(`✅ Réponse via ${modelName}`);
+        console.log(`✅ Succès via ${modelName}`);
         return text;
       }
     } catch (e: any) {
-      console.warn(`❌ Échec ${modelName}:`, e?.message);
+      console.warn(`❌ ${modelName}:`, (e?.message || "").slice(0, 100));
       lastError = e;
+
+      if (isRateLimit(e)) {
+        throw new Error("Trop de requêtes. Attends 60 secondes puis réessaie.");
+      }
     }
   }
 
   const msg = lastError?.message || "Erreur inconnue";
-  if (msg.includes("503") || msg.includes("high demand")) {
-    throw new Error("Tous les serveurs IA sont surchargés. Réessaie dans 30 secondes.");
+  console.error("Tous les modèles ont échoué:", msg.slice(0, 200));
+
+  if (msg.includes("API_KEY_INVALID") || msg.includes("API key not valid")) {
+    throw new Error("Clé API invalide.");
   }
-  if (msg.includes("PERMISSION_DENIED") || msg.includes("403")) {
-    throw new Error("API non activée.");
-  }
-  if (msg.includes("429") || msg.includes("quota")) {
-    throw new Error("Quota dépassé. Réessaie dans une minute.");
-  }
-  throw new Error("L'IA est temporairement indisponible. Réessaie.");
+  throw new Error("L'IA est temporairement indisponible. Réessaie dans 30 secondes.");
 }
