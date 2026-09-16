@@ -13,9 +13,9 @@ WebBrowser.maybeCompleteAuthSession();
  */
 export const GOOGLE_CONFIG = {
   // Client ID Web (obligatoire - fonctionne sur web ET mobile via redirect)
-  webClientId: "410867386758-q793tuo6intut0941ilv1h40tnqfll68.apps.googleusercontent.com",
+  webClientId: "410867386758-me611h1luu0dn437ajnn7sogn6g8teiq.apps.googleusercontent.com",
   // Client ID Android (optionnel, pour build natif)
-  androidClientId: "410867386758-q793tuo6intut0941ilv1h40tnqfll68.apps.googleusercontent.com",
+  androidClientId: "410867386758-k00vuu6atos3do2otf4nhau5guaj8su8.apps.googleusercontent.com",
   // Client ID iOS (optionnel)
   iosClientId: "REMPLACE_PAR_TON_IOS_CLIENT_ID.apps.googleusercontent.com",
 };
