@@ -30,7 +30,30 @@ export default function ProfileScreen() {
       Alert.alert("Permission refusée", "Autorise les notifications dans les réglages.");
       return;
     }
-    Alert.alert("✅ Notifications activées", "Les rappels seront programmés automatiquement.");
+
+    try {
+      // Programmer une notification IMMÉDIATE (2 secondes de délai)
+      const { default: Notifications } = await import("expo-notifications");
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "🔔 AutoTrack - Test",
+          body: "Les notifications fonctionnent ! Tu recevras des rappels automatiques.",
+          sound: "default",
+          ...(Platform.OS === "android" ? { channelId: "default" } : {}),
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 2,
+          ...(Platform.OS === "android" ? { channelId: "default" } : {}),
+        },
+      });
+      Alert.alert(
+        "✅ Test envoyé",
+        "Une notification va apparaître dans 2 secondes. Regarde en haut de ton écran !"
+      );
+    } catch (e: any) {
+      Alert.alert("Erreur", e?.message || "Impossible d'envoyer la notification");
+    }
   };
 
   const handleLogout = async () => {
