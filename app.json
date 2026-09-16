@@ -31,7 +31,8 @@
         "POST_NOTIFICATIONS",
         "SCHEDULE_EXACT_ALARM",
         "VIBRATE",
-        "RECEIVE_BOOT_COMPLETED"
+        "RECEIVE_BOOT_COMPLETED",
+        "USE_EXACT_ALARM"
       ]
     },
     "web": {
@@ -47,7 +48,15 @@
           "color": "#2563eb"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "-keep class expo.modules.notifications.** { *; }\n-keep class com.google.firebase.** { *; }\n-keep class com.google.android.gms.** { *; }\n-dontwarn expo.modules.notifications.**"
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {},
