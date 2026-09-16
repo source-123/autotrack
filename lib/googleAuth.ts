@@ -1,83 +1,72 @@
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-import { GoogleAuthProvider, signInWithCredential, signInWithPopup } from "firebase/auth";
 import { Platform } from "react-native";
+import { GoogleAuthProvider, signInWithCredential, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth } from "./firebase";
 
-// Nécessaire pour fermer le navigateur après redirection
-WebBrowser.maybeCompleteAuthSession();
-
-/**
- * ⚙️ CONFIGURATION GOOGLE SIGN-IN
- * Remplace par tes vrais Client IDs depuis Google Cloud Console
- */
 export const GOOGLE_CONFIG = {
-  // Client ID Web (obligatoire - fonctionne sur web ET mobile via redirect)
-  webClientId: "410867386758-me611h1luu0dn437ajnn7sogn6g8teiq.apps.googleusercontent.com",
-  // Client ID Android (optionnel, pour build natif)
-  androidClientId: "410867386758-k00vuu6atos3do2otf4nhau5guaj8su8.apps.googleusercontent.com",
-  // Client ID iOS (optionnel)
-  iosClientId: "REMPLACE_PAR_TON_IOS_CLIENT_ID.apps.googleusercontent.com",
+  // ✅ Client ID Web Firebase (celui qui est dans google-services.json)
+  webClientId: "791419730011-ujm55o5cjg35dh0j1osf6nogq73qncuj.apps.googleusercontent.com",
 };
 
 /**
- * Hook Google Sign-In (pour mobile natif).
- * Sur web, on utilise signInWithPopup à la place.
+ * Configuration native Google Sign-In (Android/iOS).
  */
-export function useGoogleAuth() {
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+let isConfigured = false;
+export function configureGoogleSignIn() {
+  if (isConfigured) return;
+  if (Platform.OS === "web") return;
+
+  const { GoogleSignin } = require("@react-native-google-signin/google-signin");
+  GoogleSignin.configure({
     webClientId: GOOGLE_CONFIG.webClientId,
-    androidClientId: GOOGLE_CONFIG.androidClientId,
-    iosClientId: GOOGLE_CONFIG.iosClientId,
+    offlineAccess: false,
+    scopes: ["profile", "email"],
   });
-
-  return { request, response, promptAsync };
+  isConfigured = true;
 }
 
-/**
- * Connexion Google sur WEB avec popup Firebase.
- */
-export async function signInWithGoogleWeb(): Promise<void> {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: "select_account" });
-  await signInWithPopup(auth, provider);
-}
+export async function signInWithGoogleMobile(): Promise<void> {
+  const { GoogleSignin } = require("@react-native-google-signin/google-signin");
+  configureGoogleSignIn();
 
-/**
- * Connexion Google sur MOBILE avec credential.
- */
-export async function signInWithGoogleMobile(idToken: string): Promise<void> {
+  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+  const userInfo: any = await GoogleSignin.signIn();
+
+  const idToken = userInfo?.idToken || userInfo?.data?.idToken;
+  if (!idToken) throw new Error("Pas d'idToken reçu");
+
   const credential = GoogleAuthProvider.credential(idToken);
   await signInWithCredential(auth, credential);
 }
 
-/**
- * Traduit les erreurs Google en messages FR/AR.
- */
+export async function signInWithGoogleWeb(): Promise<void> {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  await signInWithRedirect(auth, provider);
+}
+
+export async function checkGoogleRedirectResult() {
+  if (Platform.OS !== "web") return { user: null, error: null };
+  try {
+    const result = await getRedirectResult(auth);
+    if (result?.user) return { user: result.user, error: null };
+    return { user: null, error: null };
+  } catch (e: any) {
+    return { user: null, error: e?.code || "unknown" };
+  }
+}
+
 export function translateGoogleError(code: string, lang: "fr" | "ar" = "fr"): string {
   const map: Record<string, { fr: string; ar: string }> = {
-    "auth/popup-closed-by-user": {
-      fr: "Connexion annulée.",
-      ar: "تم إلغاء تسجيل الدخول.",
-    },
-    "auth/popup-blocked": {
-      fr: "Popup bloquée. Autorise les popups pour ce site.",
-      ar: "تم حظر النافذة المنبثقة. اسمح بها.",
-    },
-    "auth/cancelled-popup-request": {
-      fr: "Connexion annulée.",
-      ar: "تم إلغاء الطلب.",
-    },
-    "auth/account-exists-with-different-credential": {
-      fr: "Un compte existe déjà avec cet email.",
-      ar: "يوجد حساب بهذا البريد بالفعل.",
-    },
-    "auth/network-request-failed": {
-      fr: "Erreur réseau. Vérifie ta connexion.",
-      ar: "خطأ في الشبكة. تحقق من اتصالك.",
-    },
+    "auth/popup-closed-by-user": { fr: "Connexion annulée.", ar: "تم إلغاء تسجيل الدخول." },
+    "auth/popup-blocked": { fr: "Popup bloquée.", ar: "تم حظر النافذة." },
+    "auth/account-exists-with-different-credential": { fr: "Compte existant.", ar: "حساب موجود." },
+    "auth/network-request-failed": { fr: "Erreur réseau.", ar: "خطأ في الشبكة." },
+    "auth/unauthorized-domain": { fr: "Domaine non autorisé.", ar: "المجال غير مصرح." },
+    "SIGN_IN_CANCELLED": { fr: "Connexion annulée.", ar: "تم الإلغاء." },
+    "PLAY_SERVICES_NOT_AVAILABLE": { fr: "Google Play Services non disponible.", ar: "خدمات Google Play غير متاحة." },
+    "12501": { fr: "Connexion annulée.", ar: "تم الإلغاء." },
   };
   const entry = map[code];
   if (entry) return entry[lang];
-  return lang === "ar" ? "فشل تسجيل الدخول عبر Google." : "Échec de la connexion Google.";
+  return lang === "ar" ? "فشل تسجيل الدخول." : "Échec de la connexion Google.";
 }

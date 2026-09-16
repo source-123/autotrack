@@ -12,6 +12,7 @@ import { useRTL } from "../lib/useRTL";
 import { Sidebar } from "../components/Sidebar";
 import { usePremiumSubscription } from "../lib/usePremiumSubscription";
 import { useWelcomeStore } from "../lib/welcomeStore";
+import { checkGoogleRedirectResult } from "../lib/googleAuth";
 import { useOnboardingStore } from "../lib/onboardingStore";
 
 export default function RootLayout() {
@@ -20,6 +21,17 @@ export default function RootLayout() {
   const { user, loading, _init } = useAuthStore();
   const { completed } = useOnboardingStore();
   const isNavigatingRef = useRef(false);
+
+  // Vérifier le résultat d'une redirection Google
+  useEffect(() => {
+    checkGoogleRedirectResult().then(({ user, error }) => {
+      if (user) {
+        console.log("✅ Google redirect success:", user.email);
+      } else if (error) {
+        console.warn("❌ Google redirect error:", error);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     _init();

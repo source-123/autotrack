@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "791419730011",
+    "firebase_url": "https://suivi-entretien-voiture-default-rtdb.firebaseio.com",
+    "project_id": "suivi-entretien-voiture",
+    "storage_bucket": "suivi-entretien-voiture.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:791419730011:android:9b09a9ae618e713e7c277e",
+        "android_client_info": {
+          "package_name": "com.source.autotrack"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "791419730011-jds39sld6usn1cjnsl4m5l7mndamsatg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.source.autotrack",
+            "certificate_hash": "288f8903e3b3d80629d068815e8649af55073258"
+          }
+        },
+        {
+          "client_id": "791419730011-ujm55o5cjg35dh0j1osf6nogq73qncuj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuchh2MN-yTFAgDwV2CGQtp_EV2v7hJoU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "791419730011-ujm55o5cjg35dh0j1osf6nogq73qncuj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
