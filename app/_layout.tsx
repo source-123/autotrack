@@ -9,6 +9,7 @@ import { useFirebaseSync } from "../lib/useFirebaseSync";
 import { useNotifications } from "../lib/useNotifications";
 import { useNativeWindTheme } from "../lib/useNativeWindTheme";
 import { useRTL } from "../lib/useRTL";
+import { Sidebar } from "../components/Sidebar";
 import { useOnboardingStore } from "../lib/onboardingStore";
 
 export default function RootLayout() {
@@ -58,6 +59,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" />
       </Stack>
+      <Sidebar />
     </SafeAreaProvider>
   );
 }

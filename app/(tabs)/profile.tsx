@@ -137,8 +137,14 @@ export default function ProfileScreen() {
               }
               try {
                 const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-                const titles = scheduled.map((s: any) => "- " + (s.content?.title || "?")).join(" | ");
-                alert("Notifs programmees: " + scheduled.length + "\n\n" + titles.slice(0, 800));
+                const details = scheduled
+                  .map((s: any, i: number) => {
+                    const trigger = s.trigger || {};
+                    const date = trigger.value || trigger.date || trigger.seconds || "?";
+                    return (i + 1) + ". " + (s.content?.title || "?") + "\n   -> " + date;
+                  })
+                  .join("\n\n");
+                alert("Total: " + scheduled.length + " notifications\n\n" + details.slice(0, 1500));
               } catch (e: any) {
                 alert("Erreur: " + (e?.message || "inconnue"));
               }
