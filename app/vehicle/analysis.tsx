@@ -1,10 +1,11 @@
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
-import { Stack, useLocalSearchParams } from "expo-router";
-import { Sparkles, RefreshCw, AlertCircle } from "lucide-react-native";
+import { Stack, router, useLocalSearchParams } from "expo-router";
+import { Sparkles, RefreshCw, AlertCircle, ArrowLeft } from "lucide-react-native";
 import { useStore } from "../../lib/store";
 import { useTranslation } from "../../lib/useTranslation";
 import { askGemini } from "../../lib/ai";
+import { PremiumGate } from "../../components/PremiumGate";
 import { buildUserContext, getPredictionPrompt } from "../../lib/aiPrompts";
 
 export default function AnalysisScreen() {
@@ -63,11 +64,21 @@ export default function AnalysisScreen() {
   }
 
   return (
+    <PremiumGate featureName={lang === 'ar' ? 'تحليل ذكي' : 'Analyse IA'}>
     <>
       <Stack.Screen
         options={{
           title: lang === "ar" ? "تحليل ذكي" : "Analyse IA",
           headerShown: true,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+            >
+              <ArrowLeft color="#2563eb" size={24} />
+            </Pressable>
+          ),
+          headerTitleStyle: { fontWeight: "bold" },
         }}
       />
 
@@ -148,5 +159,6 @@ export default function AnalysisScreen() {
         </View>
       </ScrollView>
     </>
+    </PremiumGate>
   );
 }

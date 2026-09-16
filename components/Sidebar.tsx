@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { router, usePathname } from "expo-router";
 import { Image } from "expo-image";
 import {
-  X, Home, Car, Bell, Sparkles, BarChart3, User, Settings,
+  X, Home, Car, Bell, Sparkles, BarChart3, User, Settings, Crown,
   Globe, DollarSign, HelpCircle, LogOut, FileText, Calendar,
 } from "lucide-react-native";
 import { useSidebar } from "../lib/sidebarStore";
@@ -67,6 +67,7 @@ export function Sidebar() {
         { key: "vehicles", label: t("tabVehicles"), icon: Car, route: "/(tabs)/vehicles" },
         { key: "assistant", label: t("tabAssistant"), icon: Sparkles, route: "/(tabs)/assistant", color: "#8b5cf6" },
         { key: "reminders", label: t("tabReminders"), icon: Bell, route: "/(tabs)/reminders" },
+        { key: "premium", label: lang === "ar" ? "النسخة المميزة" : "Premium", icon: Crown, route: "/premium", color: "#f59e0b" },
       ],
     },
     {
@@ -86,12 +87,12 @@ export function Sidebar() {
       title: lang === "ar" ? "الحساب" : "Compte",
       items: [
         { key: "profile", label: t("tabProfile"), icon: User, route: "/(tabs)/profile" },
-        { key: "settings", label: t("settings"), icon: Settings, route: "/(tabs)/profile" },
+        { key: "settings", label: t("settings"), icon: Settings, route: "/settings" },
       ],
     },
     {
       items: [
-        { key: "help", label: t("helpGuide"), icon: HelpCircle, route: "/onboarding/calculations" },
+        { key: "help", label: t("helpGuide"), icon: HelpCircle, route: "/help" },
       ],
     },
   ];

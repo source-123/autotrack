@@ -7,10 +7,13 @@ import { formatMileage } from "../../lib/utils";
 import { Vehicle } from "../../types";
 import { Button } from "../../components/ui/Button";
 import { useTranslation } from "../../lib/useTranslation";
+import { usePremium } from "../../lib/premiumStore";
 
 export default function VehiclesScreen() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const vehicles = useStore((s) => s.vehicles);
+  const { isPremium } = usePremium();
+  const canAddMore = isPremium || vehicles.length < 1;
 
   return (
     <>
@@ -18,8 +21,27 @@ export default function VehiclesScreen() {
         options={{
           title: t("tabVehicles"),
           headerRight: () => (
-            <Pressable onPress={() => router.push("/vehicle/new")} className="mr-4">
-              <Plus color="#2563eb" size={24} />
+            <Pressable
+              onPress={() => {
+                if (canAddMore) {
+                  router.push("/vehicle/new");
+                } else {
+                  const { Alert } = require("react-native");
+                  Alert.alert(
+                    t("noVehicle"),
+                    lang === "ar"
+                      ? "النسخة المجانية تسمح بسيارة واحدة فقط. اشترك للفتح."
+                      : "La version gratuite permet 1 seul véhicule. Abonne-toi pour en ajouter plus.",
+                    [
+                      { text: t("cancel"), style: "cancel" },
+                      { text: "Premium", onPress: () => router.push("/premium") },
+                    ]
+                  );
+                }
+              }}
+              className="mr-4"
+            >
+              <Plus color={canAddMore ? "#2563eb" : "#94a3b8"} size={24} />
             </Pressable>
           ),
         }}

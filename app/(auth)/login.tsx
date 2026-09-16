@@ -21,7 +21,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await loginUser(email.trim(), password);
-      router.replace("/(tabs)");
+      // Le layout racine va gérer la redirection automatiquement
     } catch (e: any) {
       Alert.alert(t("loginFailed"), translateAuthError(e?.code || ""));
     } finally {

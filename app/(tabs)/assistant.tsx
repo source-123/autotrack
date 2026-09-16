@@ -9,6 +9,7 @@ import { useStore } from "../../lib/store";
 import { useChatStore } from "../../lib/chatStore";
 import { useTranslation } from "../../lib/useTranslation";
 import { chatWithGemini } from "../../lib/ai";
+import { PremiumGate } from "../../components/PremiumGate";
 import { buildUserContext, getAssistantPrompt } from "../../lib/aiPrompts";
 
 export default function AssistantScreen() {
@@ -103,6 +104,7 @@ export default function AssistantScreen() {
   };
 
   return (
+    <PremiumGate featureName={lang === 'ar' ? 'المساعد الذكي' : 'Assistant IA'}>
     <>
       <Stack.Screen
         options={{
@@ -207,6 +209,7 @@ export default function AssistantScreen() {
         </View>
       </KeyboardAvoidingView>
     </>
+    </PremiumGate>
   );
 }
 

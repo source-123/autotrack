@@ -31,7 +31,7 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await registerUser(email.trim(), password, name.trim());
-      router.replace("/(tabs)");
+      // Le layout racine va gérer la redirection automatiquement
     } catch (e: any) {
       Alert.alert(t("registerFailed"), translateAuthError(e?.code || ""));
     } finally {
