@@ -1,3 +1,4 @@
+import * as Notifications from "expo-notifications";
 import { View, Text, ScrollView, Pressable, Alert, Platform } from "react-native";
 import { Check, DollarSign, Bell, LogOut, User } from "lucide-react-native";
 import { router } from "expo-router";
@@ -33,7 +34,6 @@ export default function ProfileScreen() {
 
     try {
       // Programmer une notification IMMÉDIATE (2 secondes de délai)
-      const { default: Notifications } = await import("expo-notifications");
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "🔔 AutoTrack - Test",
@@ -129,6 +129,27 @@ export default function ProfileScreen() {
             </>
           )}
 
+          <Pressable
+            onPress={async () => {
+              if (Platform.OS === "web") {
+                alert("Les notifications ne fonctionnent pas sur web. Teste sur ton Samsung.");
+                return;
+              }
+              try {
+                const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+                const titles = scheduled.map((s: any) => "- " + (s.content?.title || "?")).join(" | ");
+                alert("Notifs programmees: " + scheduled.length + "\n\n" + titles.slice(0, 800));
+              } catch (e: any) {
+                alert("Erreur: " + (e?.message || "inconnue"));
+              }
+            }}
+            className="bg-blue-500 rounded-xl py-3 active:bg-blue-600 mt-3"
+          >
+            <Text className="text-white text-center font-bold">
+              Debug : voir notifs programmees
+            </Text>
+          </Pressable>
+          
           <Pressable onPress={testNotif} className="bg-amber-500 rounded-xl py-3 active:bg-amber-600 mt-4">
             <Text className="text-white text-center font-bold">{t("testNotifications")}</Text>
           </Pressable>
