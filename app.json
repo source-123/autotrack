@@ -56,7 +56,8 @@
             "extraProguardRules": "-keep class expo.modules.notifications.** { *; }\n-keep class com.google.firebase.** { *; }\n-keep class com.google.android.gms.** { *; }\n-dontwarn expo.modules.notifications.**"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "router": {},

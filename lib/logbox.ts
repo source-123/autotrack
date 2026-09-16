@@ -1,21 +1,27 @@
 import { LogBox } from "react-native";
 
 LogBox.ignoreLogs([
-  // Expo Router : GO_BACK sans historique (inoffensif)
+  // Expo Router
   "The action 'GO_BACK' was not handled by any navigator",
 
-  // Notifications sur web
+  // Notifications web
   "[expo-notifications] Listening to push token changes is not yet fully supported on web",
 
-  // Style shadow déprécié (web uniquement)
+  // Styles dépréciés web
   '"shadow*" style props are deprecated',
 
   // Accessibilité web
   "Blocked aria-hidden",
 
-  // React Native Web
+  // Touch events web
   "Cannot record touch end without a touch start",
 
-  // Images lazy (Chrome)
+  // Images lazy loading
   "[Intervention] Images loaded lazily",
+
+  // Animated sur web
+  "Animated: `useNativeDriver` is not supported",
+
+  // Firebase / Google Sign-In sur Codespaces (COOP)
+  "Cross-Origin-Opener-Policy policy would block the window.closed call",
 ]);

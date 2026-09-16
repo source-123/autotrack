@@ -1,4 +1,5 @@
 import {
+  sendPasswordResetEmail,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
@@ -66,4 +67,12 @@ export function translateAuthError(code: string): string {
     "auth/too-many-requests": "Trop de tentatives. Réessaie plus tard.",
   };
   return map[code] || "Erreur inconnue. Réessaie.";
+}
+
+
+/**
+ * Envoie un email de réinitialisation de mot de passe.
+ */
+export async function resetPassword(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email);
 }
