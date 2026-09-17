@@ -6,7 +6,6 @@ import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Check } from "lucide-react-
 import { registerUser, translateAuthError } from "../../lib/auth";
 import { useTranslation } from "../../lib/useTranslation";
 import { validateEmail, validatePassword, validateName, validatePasswordConfirm } from "../../lib/validation";
-import { GoogleSignInButton } from "../../components/GoogleSignInButton";
 
 export default function RegisterScreen() {
   const { t, lang } = useTranslation();
@@ -80,18 +79,6 @@ export default function RegisterScreen() {
         </View>
 
         <View className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 gap-4">
-          {/* Bouton Google */}
-          <GoogleSignInButton />
-
-          {/* Séparateur "OU" */}
-          <View className="flex-row items-center gap-3">
-            <View className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
-            <Text className="text-xs text-slate-400 font-semibold">
-              {isAr ? "أو" : "OU"}
-            </Text>
-            <View className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
-          </View>
-
           {errors.global ? (
             <View className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl p-3 flex-row items-center gap-2">
               <AlertCircle color="#ef4444" size={20} />
