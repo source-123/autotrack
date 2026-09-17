@@ -12,7 +12,7 @@ import { useRTL } from "../lib/useRTL";
 import { Sidebar } from "../components/Sidebar";
 import { usePremiumSubscription } from "../lib/usePremiumSubscription";
 import { useWelcomeStore } from "../lib/welcomeStore";
-import { checkGoogleRedirectResult } from "../lib/googleAuth";
+import { checkGoogleRedirectResult, configureGoogleSignIn } from "../lib/googleAuth";
 import { useOnboardingStore } from "../lib/onboardingStore";
 
 export default function RootLayout() {
@@ -34,6 +34,7 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
+    configureGoogleSignIn();
     _init();
   }, [_init]);
 
