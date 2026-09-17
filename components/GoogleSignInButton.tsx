@@ -4,7 +4,6 @@ import { useTranslation } from "../lib/useTranslation";
 import {
   signInWithGoogleWeb,
   signInWithGoogleMobile,
-  translateGoogleError,
 } from "../lib/googleAuth";
 
 export function GoogleSignInButton() {
@@ -21,15 +20,19 @@ export function GoogleSignInButton() {
         await signInWithGoogleMobile();
       }
     } catch (e: any) {
-      console.error("Google Sign-In error:", e);
-      const code = e?.code || "";
-      // Ne pas afficher d'erreur si l'utilisateur annule
-      if (code !== "SIGN_IN_CANCELLED" && code !== "12501") {
-        Alert.alert(
-          isAr ? "خطأ" : "Erreur",
-          translateGoogleError(code || e?.message || "", lang as any)
-        );
-      }
+      // Afficher le détail complet de l'erreur
+      const detail = [
+        "code: " + (e?.code || "N/A"),
+        "message: " + (e?.message || "N/A"),
+        "native: " + (e?.nativeStackAndroid?.[0]?.message || "N/A"),
+      ].join("\n\n");
+      
+      console.error("🔴 Google Error:", detail);
+      
+      Alert.alert(
+        isAr ? "خطأ Google" : "Erreur Google - Détails",
+        detail
+      );
     } finally {
       setLoading(false);
     }
